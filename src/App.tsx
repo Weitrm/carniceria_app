@@ -1,35 +1,34 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { LoginPage } from './pages/LoginPage';
-import { RegisterPage } from './pages/RegisterPage';
-import { AdminProductPage } from './pages/AdminProductsPage';
-import { OperarioProductsPage } from './pages/OperarioProductsPage';
-import { OperarioOrderConfirmPage } from './pages/OperarioOrderConfirmPage';
-import { AdminOrderPage } from './pages/AdminOrdersPage';
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import {Login} from "./routes/auth/Login";
+import {Register} from "./routes/auth/Register";
 
+import {UserProductsPage} from "./routes/user/UserProductsPage";
+import {UserCartPage} from "./routes/user/UserCartPage";
 
+import {AdminOrdersPage} from "./routes/admin/AdminOrdersPage";
+import {AdminProductsPage} from "./routes/admin/AdminProductsPage";
+import { ProtectedRoute } from "./components/shared/ProtectedRoute";
 
-export const App = () => {
+const App = () => {
   return (
-    <>
-      <BrowserRouter>
-        <Routes>
-          {/* publico */}
-          <Route path="/login" element={<LoginPage/>}/>
-          <Route path="/registro" element={<RegisterPage/>}/>
+    <BrowserRouter>
+      <Routes>
+        {/* Auth */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
 
-          {/* operario */}
-          <Route path="/operario/productos" element={<OperarioProductsPage/>}/>
-          <Route path="/operario/confirmar" element={<OperarioOrderConfirmPage/>}/>
+        {/* User */}
+        <Route path="/user/products" element={<ProtectedRoute allowedRoles={['operario']}> <UserProductsPage /> </ProtectedRoute>} />
+        <Route path="/user/cart" element={<ProtectedRoute allowedRoles={['operario']}> <UserCartPage /> </ProtectedRoute> } />
 
-          {/* admin */}
-          <Route path="admin/productos" element={<AdminProductPage/>}/>
-          <Route path="admin/pedidos" element={<AdminOrderPage/>}/>
+        {/* Admin */}
+        <Route path="/admin/orders" element={<ProtectedRoute allowedRoles={['admin']}> <AdminOrdersPage /> </ProtectedRoute> } />
+        <Route path="/admin/products" element={<ProtectedRoute allowedRoles={['admin']}> <AdminProductsPage /> </ProtectedRoute> } />
 
-          {/* redireccion por defecto */}
-          <Route path="*" element={<Navigate to="login" replace/>} />
-        </Routes>
-      </BrowserRouter>
-    </>
+        {/* Default */}
+        <Route path="*" element={<Navigate to="/login" />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 

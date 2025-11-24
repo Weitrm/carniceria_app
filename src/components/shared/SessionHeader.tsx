@@ -14,13 +14,21 @@ export const SessionHeader = () => {
   if (!user) return null;
 
   return (
-    <header className="flex items-center justify-between bg-white shadow px-4 py-3">
-      <Link to={user.role === "admin" ? "/admin/orders" : "/user/products"} className="font-semibold text-rose-600">
-        Carnicería FMP
+    <header className="flex items-center justify-between rounded-2xl border border-rose-100 bg-white px-4 py-3 shadow-sm">
+      <Link
+        to={user.role === "admin" ? "/admin/orders" : "/user/products"}
+        className="font-semibold text-rose-700"
+      >
+        Carniceria FMP
       </Link>
       <div className="flex items-center gap-3 text-sm text-slate-700">
-        <span>{user.nombre} · {user.role}</span>
-        <button onClick={handleLogout} className="rounded bg-rose-600 px-3 py-1 text-white text-xs font-semibold hover:bg-rose-700">
+        <span className="rounded-full bg-rose-50 px-3 py-1 font-semibold text-rose-700">
+          {user.nombre} - {user.role}
+        </span>
+        <button
+          onClick={handleLogout}
+          className="rounded-lg bg-rose-600 px-3 py-1 text-xs font-semibold text-white transition hover:bg-rose-700"
+        >
           Salir
         </button>
       </div>

@@ -13,7 +13,7 @@ export const UserProductsPage = () => {
             </p>
             <h1 className="text-2xl font-bold text-slate-900">Productos disponibles</h1>
             <p className="mt-1 text-sm text-slate-600">
-              Revisa los cortes y agrega al carrito lo que necesitas para el despacho.
+              Revisa los cortes y agrega al carrito lo que necesitas para tu pedido.
             </p>
           </div>
           <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
@@ -22,9 +22,6 @@ export const UserProductsPage = () => {
         </header>
 
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <div className="rounded-xl border border-rose-100 bg-gradient-to-br from-rose-50 to-white p-4 text-sm text-slate-700 shadow-inner">
-            Aun no hay listado de productos. Agrega elementos desde el panel de administrador para empezar a vender.
-          </div>
           <div className="rounded-xl border border-slate-100 bg-white p-4 text-sm text-slate-700 shadow-sm">
             Usa este espacio para mostrar tarjetas de productos con precios y disponibilidad.
           </div>

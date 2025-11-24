@@ -23,10 +23,10 @@ export const AdminOrdersPage = () => {
 
         <div className="mt-6 grid gap-4">
           <div className="rounded-xl border border-slate-100 bg-white p-4 text-sm text-slate-700 shadow-sm">
-            Aun no hay pedidos registrados. Cuando los usuarios envien solicitudes, apareceran aqui para que puedas aprobarlas.
+            Aun no hay pedidos registrados.
           </div>
           <div className="rounded-xl border border-rose-100 bg-rose-50/70 p-4 text-sm text-rose-800 shadow-inner">
-            Idea: agrega filtros por estado (pendiente, en preparacion, entregado) y acciones rapidas para cada pedido.
+            Agregar filtros por estado (pendiente, en preparacion, entregado) y acciones rapidas para cada pedido.
           </div>
         </div>
       </section>

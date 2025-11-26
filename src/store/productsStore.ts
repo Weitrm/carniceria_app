@@ -1,6 +1,5 @@
-
 import { create } from "zustand";
-import type { Product } from "../lib/types";
+import type { Product, ProductInput } from "../lib/types";
 
 const PRODUCTS_STORAGE_KEY = "carniceria_products";
 
@@ -27,8 +26,6 @@ const DEFAULT_PRODUCTS: Product[] = [
     isActive: true,
   },
 ];
-
-type ProductInput = Omit<Product, "id">;
 
 type ProductsState = {
   products: Product[];

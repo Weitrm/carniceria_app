@@ -11,7 +11,7 @@ export const AdminOrdersPage = () => {
             <p className="text-sm font-semibold uppercase tracking-wide text-rose-500">
               Admin
             </p>
-            <h1 className="text-2xl font-bold text-slate-900">Pedidos pendientes</h1>
+            <h1 className="text-2xl font-bold text-slate-900">Pedidos pendientes</h1> 
             <p className="mt-1 text-sm text-slate-600">
               Revisa los pedidos enviados por los operarios y actualiza su estado.
             </p>

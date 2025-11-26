@@ -1,13 +1,4 @@
-import type { UserRole } from "./types";
-
-export type StoredUser = {
-  id: string;
-  name: string;
-  email: string;
-  funcionario: string;
-  password: string;
-  role: UserRole;
-};
+import type { StoredUser } from "./types";
 
 export const USERS_STORAGE_KEY = "carniceria_users";
 export const CURRENT_USER_KEY = "carniceria_currentUser";
@@ -35,3 +26,5 @@ export const loadUsers = (): StoredUser[] => {
 export const saveUsers = (users: StoredUser[]) => {
   localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
 };
+
+export type { StoredUser };

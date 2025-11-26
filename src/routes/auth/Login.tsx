@@ -40,7 +40,7 @@ export const Login = () => {
     login({ id: found.id, nombre: found.name, role: found.role });
     // Envia a el usuario a el sitio corresponidendo segun su rol
     navigate(
-      found.role === "admin" ? "/admin/orders" : "/user/products",
+      found.role === "admin" ? "/admin/products" : "/user/products",
       { replace: true }      
     );
     console.log("Iniciando sesión con:", values);

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { loadUsers, saveUsers } from "../../lib/userStorage";
-import type {StoredUser} from "../../lib/userStorage"
+import type { StoredUser } from "../../lib/types";
 
 
 export const Register = () => {
@@ -62,7 +62,7 @@ export const Register = () => {
           <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-xl ring-1 ring-rose-100">
             <header className="mb-8 space-y-2">
               <p className="text-sm flex justify-center mb-4 font-bold uppercase tracking-[0.25em] text-rose-500">
-                Carniceria <span className="text-emerald-800 ">FMP</span>
+                Carniceria <span className="text-emerald-800 ml-2">FMP</span>
               </p>
               <h2 className="text-3xl font-bold text-slate-900">
                 Crear cuenta operario

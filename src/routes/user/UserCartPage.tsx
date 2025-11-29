@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+﻿import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppShell } from "../../components/layout/AppShell";
 import { SessionHeader } from "../../components/shared/SessionHeader";
@@ -6,7 +6,7 @@ import productsStore from "../../store/productsStore";
 import cartStore from "../../store/cartStore";
 import ordersStore from "../../store/ordersStore";
 import authStore from "../../store/authStore";
-import type { CartLine } from "../../lib/types";
+import type { CartLine, OrderStatus } from "../../lib/types";
 
 const currencyFormat = (value: number) =>
   new Intl.NumberFormat("es-UY", {
@@ -15,6 +15,12 @@ const currencyFormat = (value: number) =>
     maximumFractionDigits: 2,
     minimumFractionDigits: 2,
   }).format(value);
+
+const statusBadgeStyles: Record<OrderStatus, string> = {
+  pendiente: "bg-amber-50 text-amber-700 border border-amber-200",
+  hecho: "bg-emerald-50 text-emerald-700 border border-emerald-200",
+  cancelado: "bg-rose-50 text-rose-700 border border-rose-200",
+};
 
 export const UserCartPage = () => {
   const navigate = useNavigate();
@@ -25,6 +31,7 @@ export const UserCartPage = () => {
   const removeItem = cartStore((s) => s.removeItem);
   const clearCart = cartStore((s) => s.clear);
   const addOrder = ordersStore((s) => s.addOrder);
+  const orders = ordersStore((s) => s.orders);
   const [feedback, setFeedback] = useState<string | null>(null);
 
   const detailedItems = useMemo<CartLine[]>(() => {
@@ -59,6 +66,13 @@ export const UserCartPage = () => {
     navigate("/user/products");
   };
 
+  const lastUserOrder = useMemo(() => {
+    if (!user) return null;
+    const userOrders = orders.filter((o) => o.userId === user.id);
+    if (userOrders.length === 0) return null;
+    return userOrders.sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
+  }, [orders, user]);
+
   return (
     <AppShell>
       <SessionHeader />
@@ -81,6 +95,26 @@ export const UserCartPage = () => {
         {feedback && (
           <div className="mt-4 rounded-lg border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
             {feedback}
+          </div>
+        )}
+
+        {lastUserOrder && (
+          <div className="mt-4 rounded-lg border border-slate-100 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Estado de tu ultimo pedido
+                </p>
+                <p className="text-xs text-slate-500">
+                  Enviado: {new Date(lastUserOrder.createdAt).toLocaleString()}
+                </p>
+              </div>
+              <span
+                className={`rounded-full px-3 py-1 text-xs font-semibold capitalize ${statusBadgeStyles[lastUserOrder.status]}`}
+              >
+                {lastUserOrder.status}
+              </span>
+            </div>
           </div>
         )}
 

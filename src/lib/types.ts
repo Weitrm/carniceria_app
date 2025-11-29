@@ -29,7 +29,7 @@ export interface Product {
 
 export type ProductInput = Omit<Product, "id">;
 
-export type OrderStatus = "pendiente" | "preparacion" | "hecho" | "entregado" | "cancelado";
+export type OrderStatus = "pendiente" | "hecho" | "cancelado";
 
 export interface OrderItem {
   productId: string;

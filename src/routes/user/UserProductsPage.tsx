@@ -1,3 +1,4 @@
+﻿import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppShell } from "../../components/layout/AppShell";
 import { SessionHeader } from "../../components/shared/SessionHeader";
@@ -16,11 +17,12 @@ export const UserProductsPage = () => {
   const navigate = useNavigate();
   const products = productsStore((s) => s.products);
   const addToCart = cartStore((s) => s.addItem);
+  const [lastAdded, setLastAdded] = useState<string | null>(null);
   const activeProducts = products.filter((p) => p.isActive);
 
   const handleAdd = (productId: string, maxKg: number) => {
     addToCart({ productId, cantidadKg: 1 }, maxKg);
-    navigate("/user/cart");
+    setLastAdded(productId);
   };
 
   return (
@@ -46,6 +48,20 @@ export const UserProductsPage = () => {
             </span>
           </div>
         </header>
+
+        {lastAdded && (
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+            <span>
+              Producto agregado al carrito. Puedes seguir agregando o revisar tu pedido.
+            </span>
+            <button
+              onClick={() => navigate("/user/cart")}
+              className="rounded-lg bg-emerald-600 px-3 py-1 text-xs font-semibold text-white shadow-sm transition hover:bg-emerald-700"
+            >
+              Ir al carrito
+            </button>
+          </div>
+        )}
 
         {activeProducts.length === 0 ? (
           <div className="mt-6 rounded-xl border border-slate-100 bg-white p-6 text-sm text-slate-700 shadow-sm">

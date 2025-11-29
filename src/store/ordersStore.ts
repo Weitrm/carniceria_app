@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { Order, OrderInput, OrderItem, OrderStatus } from "../lib/types";
+import type { Order, OrderInput, OrderStatus } from "../lib/types";
 
 const ORDERS_STORAGE_KEY = "carniceria_orders";
 
@@ -11,19 +11,11 @@ type OrdersState = {
 
 const DEFAULT_ORDERS: Order[] = [
   {
-    id: "order-001",
-    userId: "operario-001",
+    id: "",
+    userId: "",
     items: [
-      { productId: "prod-001", cantidadKg: 2 },
-      { productId: "prod-002", cantidadKg: 1 },
+      { productId: "", cantidadKg: 0 },
     ],
-    status: "pendiente",
-    createdAt: new Date(Date.now()).toISOString(),
-  },
-  {
-    id: "order-002",
-    userId: "operario-002",
-    items: [{ productId: "prod-003", cantidadKg: 3 }],
     status: "hecho",
     createdAt: new Date(Date.now()).toISOString(),
   },

@@ -3,7 +3,7 @@ import type { SessionUser } from "../lib/types";
 
 type AuthState = {
   user: SessionUser | null;
-  login: (data: SessionUser) => void;
+  login: (data: SessionUser, remember?: boolean) => void;
   logout: () => void;
 };
 
@@ -13,7 +13,13 @@ const getStoredUser = (): SessionUser | null => {
   const raw = localStorage.getItem(CURRENT_USER_KEY);
   if (!raw) return null;
   try {
-    return JSON.parse(raw) as SessionUser;
+    const parsed = JSON.parse(raw) as Partial<SessionUser> & { name?: string };
+    if (!parsed.id || !parsed.role) return null;
+    return {
+      id: parsed.id,
+      role: parsed.role,
+      nombre: parsed.nombre ?? parsed.name ?? "",
+    };
   } catch {
     return null;
   }
@@ -21,10 +27,14 @@ const getStoredUser = (): SessionUser | null => {
 
 export const authStore = create<AuthState>((set) => ({
   user: getStoredUser(),
-  login: ({ id, nombre, role }) =>
+  login: ({ id, nombre, role }, remember = true) =>
     set(() => {
       const user = { id, nombre, role } satisfies SessionUser;
-      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+      if (remember) {
+        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+      } else {
+        localStorage.removeItem(CURRENT_USER_KEY);
+      }
       return { user };
     }),
   logout: () => {

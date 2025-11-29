@@ -1,8 +1,9 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import authStore from "../../store/authStore";
-import { CURRENT_USER_KEY, loadUsers } from "../../lib/userStorage";
+import { loadUsers } from "../../lib/userStorage";
+import { isValidEmail } from "../../lib/validation";
 
 type LoginFormValues = {
   email: string;
@@ -14,7 +15,7 @@ export const Login = () => {
   const navigate = useNavigate();
   const login = authStore((state) => state.login);
   const [formError, setFormError] = useState("");
-  
+
   const {
     register,
     handleSubmit,
@@ -23,7 +24,6 @@ export const Login = () => {
     defaultValues: { remember: true },
   });
 
-  // Evento Iniciar Sesion
   const onSubmit = handleSubmit(async (values) => {
     const users = loadUsers();
     const found = users.find(
@@ -35,24 +35,25 @@ export const Login = () => {
       return;
     }
 
-    // Guarda y setea el usuario
-    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(found));
-    login({ id: found.id, nombre: found.name, role: found.role });
-    // Envia a el usuario a el sitio corresponidendo segun su rol
+    login({ id: found.id, nombre: found.name, role: found.role }, values.remember);
     navigate(
       found.role === "admin" ? "/admin/products" : "/user/products",
-      { replace: true }      
+      { replace: true }
     );
-    console.log("Iniciando sesión con:", values);
-
   });
 
   return (
     <main className="min-h-screen bg-linear-to-br from-rose-50 via-white to-amber-50 text-slate-900">
-      <div className="mx-auto flex min-h-screen max-w-6xl flex-col lg:flex-row">
-        <section className="flex flex-1 items-center justify-center bg-white/70 px-8 py-12 backdrop-blur lg:px-12">
+      <div className="mx-auto flex min-h-screen max-w-6xl flex-col px-4 sm:px-6 lg:flex-row">
+        <section className="flex flex-1 items-center justify-center bg-white/70 px-6 py-12 backdrop-blur sm:px-8 lg:px-12">
           <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-xl ring-1 ring-rose-100">
             <header className="mb-8 space-y-2">
+              <div className="flex items-center gap-2">
+                <img src="/logo.svg" alt="Carniceria FMP" className="h-10 w-10" />
+                <p className="text-sm font-semibold uppercase tracking-[0.25em] text-rose-500">
+                  Carniceria FMP
+                </p>
+              </div>
               <p className="text-sm font-semibold uppercase tracking-[0.25em] text-rose-500">
                 Bienvenido de nuevo
               </p>
@@ -82,7 +83,7 @@ export const Login = () => {
                   {...register("email", {
                     required: "Ingresa tu correo",
                     pattern: {
-                      value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                      value: isValidEmail.regex,
                       message: "Correo no válido",
                     },
                   })}
@@ -131,6 +132,7 @@ export const Login = () => {
                 <button
                   type="button"
                   className="font-semibold text-rose-600 transition hover:text-rose-700"
+                  onClick={() => setFormError("Solicita el reseteo al administrador.")}
                 >
                   ¿Olvidaste tu contraseña?
                 </button>

@@ -29,7 +29,7 @@ export const UserProductsPage = () => {
     <AppShell>
       <SessionHeader />
       <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-rose-100/60">
-        <header className="flex items-start justify-between gap-3">
+        <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-wide text-rose-500">
               Catalogo
@@ -46,6 +46,12 @@ export const UserProductsPage = () => {
             <span className="text-xs text-slate-500">
               {activeProducts.length} activos / {products.length} totales
             </span>
+            <button
+              onClick={() => navigate("/user/cart")}
+              className="w-full rounded-lg border border-emerald-200 bg-white px-3 py-2 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-50 sm:w-auto"
+            >
+              Ir al carrito
+            </button>
           </div>
         </header>
 
@@ -56,7 +62,7 @@ export const UserProductsPage = () => {
             </span>
             <button
               onClick={() => navigate("/user/cart")}
-              className="rounded-lg bg-emerald-600 px-3 py-1 text-xs font-semibold text-white shadow-sm transition hover:bg-emerald-700"
+              className="w-full rounded-lg bg-emerald-600 px-3 py-1 text-xs font-semibold text-white shadow-sm transition hover:bg-emerald-700 sm:w-auto"
             >
               Ir al carrito
             </button>

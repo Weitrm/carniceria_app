@@ -62,7 +62,7 @@ export const UserCartPage = () => {
       })),
     });
     clearCart();
-    setFeedback("Pedido enviado al administrador.");
+    setFeedback("Pedido enviado.");
     navigate("/user/products");
   };
 
@@ -77,19 +77,27 @@ export const UserCartPage = () => {
     <AppShell>
       <SessionHeader />
       <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-rose-100/60">
-        <header className="flex items-start justify-between gap-3">
+        <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-wide text-rose-500">
               Carrito
             </p>
             <h1 className="text-2xl font-bold text-slate-900">Resumen de pedido</h1>
             <p className="mt-1 text-sm text-slate-600">
-              Confirma cantidades antes de enviar al administrador para su preparacion.
+              Confirma cantidades antes de enviar a carniceria para su preparacion.
             </p>
           </div>
-          <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
-            En revision
-          </span>
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:items-end">
+            <span className="inline-flex justify-center rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
+              En revision
+            </span>
+            <button
+              onClick={() => navigate("/user/products")}
+              className="w-full rounded-lg border border-emerald-200 bg-white px-4 py-2 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-50 sm:w-auto"
+            >
+              Seguir comprando
+            </button>
+          </div>
         </header>
 
         {feedback && (
@@ -191,7 +199,7 @@ export const UserCartPage = () => {
               onClick={handleSend}
               className="mt-4 w-full rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-emerald-200"
             >
-              Enviar pedido al admin
+              Enviar pedido
             </button>
             <button
               disabled={detailedItems.length === 0}

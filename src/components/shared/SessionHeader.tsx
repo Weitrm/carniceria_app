@@ -17,9 +17,9 @@ export const SessionHeader = () => {
     <header className="flex items-center justify-between rounded-2xl border border-rose-100 bg-white px-4 py-3 shadow-sm">
       <Link
         to={user.role === "admin" ? "/admin/orders" : "/user/products"}
-        className="font-semibold text-rose-700"
+        className="flex items-center gap-2 font-semibold text-rose-700"
       >
-        Carniceria FMP
+      <span>Carniceria FMP</span>
       </Link>
       <div className="flex items-center gap-3 text-sm text-slate-700">
         <span className="rounded-full bg-rose-50 px-3 py-1 font-semibold text-rose-700">

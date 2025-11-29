@@ -46,7 +46,7 @@ export interface Order {
   userId: string;
   items: OrderItem[];
   status: OrderStatus;
-  createdAt: string; // ISO date
+  createdAt: string; 
 }
 
 export type CartLine = OrderItem & {

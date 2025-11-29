@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { AppShell } from "../../components/layout/AppShell";
 import { SessionHeader } from "../../components/shared/SessionHeader";
@@ -21,6 +22,7 @@ const currencyFormat = (value: number) =>
   }).format(value);
 
 export const AdminProductsPage = () => {
+  const navigate = useNavigate();
   const { products, addProduct, updateProduct, toggleActive, removeProduct,} = productsStore();
   const [editingId, setEditingId] = useState<string | null>(null);
   const { register, handleSubmit, reset, watch } = useForm<ProductFormValues>({
@@ -78,11 +80,12 @@ export const AdminProductsPage = () => {
     });
   });
 
+  
   return (
     <AppShell>
       <SessionHeader />
       <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-rose-100/60">
-        <header className="flex items-start justify-between gap-3">
+        <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-wide text-rose-500">
               Admin
@@ -92,18 +95,26 @@ export const AdminProductsPage = () => {
               Crea, edita o desactiva cortes disponibles para los operarios.
             </p>
           </div>
-          <button
-            onClick={() => setEditingId(null)}
-            className="rounded-lg bg-rose-600 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-rose-700"
-          >
-            Nuevo producto
-          </button>
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+            <button
+              onClick={() => navigate("/admin/orders")}
+              className="w-full rounded-lg border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700 transition hover:border-rose-200 hover:text-rose-600 sm:w-auto"
+            >
+              Ir a pedidos
+            </button>
+            <button
+              onClick={() => setEditingId(null)}
+              className="w-full rounded-lg bg-rose-600 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-rose-700 sm:w-auto"
+            >
+              Nuevo producto
+            </button>
+          </div>
         </header>
 
         <div className="mt-6 grid gap-6 lg:grid-cols-3">
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 flex justify-center">
             <div className="rounded-xl border border-slate-100 bg-white shadow-sm">
-              <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
+              <div className="flex flex-col gap-2 border-b border-slate-100 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                     Lista de productos
@@ -116,14 +127,13 @@ export const AdminProductsPage = () => {
                   {products.filter((p) => p.isActive).length} activos
                 </div>
               </div>
-
               {products.length === 0 ? (
                 <div className="p-6 text-sm text-slate-600">
                   Aun no hay productos cargados. Usa el formulario para crear el primer corte.
                 </div>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-slate-100 text-sm">
+                  <table className="min-w-[720px] divide-y divide-slate-100 text-sm">
                     <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                       <tr>
                         <th className="px-4 py-3">Nombre</th>
@@ -155,7 +165,7 @@ export const AdminProductsPage = () => {
                             </span>
                           </td>
                           <td className="px-4 py-3 text-right">
-                            <div className="flex justify-end gap-2">
+                            <div className="flex flex-wrap justify-end gap-2">
                               <button
                                 onClick={() => setEditingId(product.id)}
                                 className="rounded-lg border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-700 transition hover:border-rose-200 hover:text-rose-600"
@@ -211,7 +221,7 @@ export const AdminProductsPage = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div className="space-y-1">
                   <label className="text-sm font-semibold text-slate-700">Precio por kg</label>
                   <input
@@ -250,17 +260,17 @@ export const AdminProductsPage = () => {
                 />
               </label>
 
-              <div className="flex items-center justify-between gap-3">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <button
                   type="button"
                   onClick={() => setEditingId(null)}
-                  className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-rose-200 hover:text-rose-600"
+                  className="w-full rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-rose-200 hover:text-rose-600 sm:w-auto"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="rounded-lg bg-rose-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-rose-700"
+                  className="w-full rounded-lg bg-rose-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-rose-700 sm:w-auto"
                 >
                   {editingProduct ? "Guardar cambios" : "Crear producto"}
                 </button>

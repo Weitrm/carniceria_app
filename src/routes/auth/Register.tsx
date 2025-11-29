@@ -1,37 +1,40 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { loadUsers, saveUsers } from "../../lib/userStorage";
 import type { StoredUser } from "../../lib/types";
-
+import { hasMinLength, isValidEmail } from "../../lib/validation";
 
 export const Register = () => {
+  const navigate = useNavigate();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [funcionario, setFuncionario] = useState("");
   const [password, setPassword] = useState("");
   const [repeatPassword, setRepeatPassword] = useState("");
   const [formError, setFormError] = useState("");
+  const [success, setSuccess] = useState("");
 
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setSuccess("");
 
     if (!name || !email || !funcionario || !password || !repeatPassword) {
       setFormError("Todos los campos son obligatorios");
       return;
     }
 
-    if (!email.includes("@")) {
+    if (!isValidEmail.test(email)) {
       setFormError("El email no parece válido");
       return;
     }
 
-    if (password.length < 6) {
+    if (!hasMinLength(password, 6)) {
       setFormError("La contraseña debe tener al menos 6 caracteres");
       return;
     }
 
     if (password !== repeatPassword) {
-      setFormError("Las contraseñas no coindicen");
+      setFormError("Las contraseñas no coinciden");
       return;
     }
 
@@ -52,18 +55,24 @@ export const Register = () => {
 
     saveUsers([...users, newUser]);
     setFormError("");
-    console.log("Usuario listo para registrar:", newUser);
+    setSuccess("Cuenta creada. Te redirigimos al login...");
+    setTimeout(() => {
+      navigate("/login", { replace: true });
+    }, 1200);
   };
 
   return (
     <main className="min-h-screen bg-linear-to-br from-rose-50 via-white to-amber-50 text-slate-900">
-      <div className="mx-auto flex min-h-screen max-w-6xl flex-col lg:flex-row">
-        <section className="flex flex-1 items-center justify-center bg-white/70 px-8 py-12 backdrop-blur lg:px-12">
+      <div className="mx-auto flex min-h-screen max-w-6xl flex-col px-4 sm:px-6 lg:flex-row">
+        <section className="flex flex-1 items-center justify-center bg-white/70 px-6 py-12 backdrop-blur sm:px-8 lg:px-12">
           <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-xl ring-1 ring-rose-100">
             <header className="mb-8 space-y-2">
-              <p className="text-sm flex justify-center mb-4 font-bold uppercase tracking-[0.25em] text-rose-500">
-                Carniceria <span className="text-emerald-800 ml-2">FMP</span>
-              </p>
+              <div className="flex items-center gap-2 justify-center mb-4">
+                <img src="/logo.svg" alt="Carniceria FMP" className="h-10 w-10" />
+                <p className="text-sm font-bold uppercase tracking-[0.25em] text-rose-500">
+                  Carniceria <span className="text-emerald-800 ml-2">FMP</span>
+                </p>
+              </div>
               <h2 className="text-3xl font-bold text-slate-900">
                 Crear cuenta operario
               </h2>
@@ -73,8 +82,14 @@ export const Register = () => {
             </header>
 
             {formError && (
-              <div className="mb-6 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
+              <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
                 {formError}
+              </div>
+            )}
+
+            {success && (
+              <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
+                {success}
               </div>
             )}
 
@@ -100,7 +115,7 @@ export const Register = () => {
                   htmlFor="email"
                   className="flex items-center justify-between text-sm font-medium text-slate-700"
                 >
-                  Correo electronico
+                  Correo electrónico
                 </label>
                 <input
                   id="email"

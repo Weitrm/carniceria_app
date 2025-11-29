@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+﻿import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppShell } from "../../components/layout/AppShell";
 import { SessionHeader } from "../../components/shared/SessionHeader";
@@ -37,8 +37,7 @@ export const AdminOrdersPage = () => {
   const updateStatus = ordersStore((s) => s.updateStatus);
   const products = productsStore((s) => s.products);
   const users = useMemo(() => loadUsers(), []);
-  const [statusFilter, setStatusFilter] = useState<OrderStatus | "todos">("todos");
-
+  
   const detailedOrders = useMemo(() => {
     return orders.map((order) => {
       const items: CartLine[] = order.items.flatMap((item) => {
@@ -58,14 +57,6 @@ export const AdminOrdersPage = () => {
     });
   }, [orders, products, users]);
 
-  const filteredOrders = useMemo(
-    () =>
-      statusFilter === "todos"
-        ? detailedOrders
-        : detailedOrders.filter((o) => o.status === statusFilter),
-    [detailedOrders, statusFilter]
-  );
-
   return (
     <AppShell>
       <SessionHeader />
@@ -75,27 +66,12 @@ export const AdminOrdersPage = () => {
             <p className="text-sm font-semibold uppercase tracking-wide text-rose-500">
               Admin
             </p>
-            <h1 className="text-2xl font-bold text-slate-900">Pedidos</h1>
+            <h1 className="text-2xl font-bold text-slate-900">Pedidos pendientes</h1>
             <p className="mt-1 text-sm text-slate-600">
               Revisa los pedidos enviados por los operarios y actualiza su estado.
             </p>
           </div>
           <div className="flex w-full flex-col gap-2 sm:w-auto sm:items-end">
-            <div className="flex flex-wrap gap-2">
-              {(["todos", "pendiente", "hecho", "cancelado"] as const).map((status) => (
-                <button
-                  key={status}
-                  onClick={() => setStatusFilter(status)}
-                  className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
-                    statusFilter === status
-                      ? "bg-rose-600 text-white shadow-sm"
-                      : "border border-slate-200 bg-white text-slate-700 hover:border-rose-200 hover:text-rose-700"
-                  }`}
-                >
-                  {status === "todos" ? "Todos" : status}
-                </button>
-              ))}
-            </div>
             <button
               onClick={() => navigate("/admin/products")}
               className="w-full rounded-lg border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700 transition hover:border-rose-200 hover:text-rose-600 sm:w-auto"
@@ -107,11 +83,11 @@ export const AdminOrdersPage = () => {
 
         <div className="mt-6 grid gap-4">
           <div className="rounded-xl border border-slate-100 bg-white p-4 text-sm text-slate-700 shadow-sm">
-            {filteredOrders.length === 0 ? (
+            {detailedOrders.length === 0 ? (
               <p className="text-slate-500">No hay pedidos cargados.</p>
             ) : (
               <div className="space-y-3">
-                {filteredOrders.map((order) => (
+                {detailedOrders.map((order) => (
                   <div
                     key={order.id}
                     className="flex flex-col gap-3 rounded-lg border border-slate-100 bg-slate-50/60 p-3 md:flex-row md:items-center md:justify-between"
@@ -174,7 +150,7 @@ export const AdminOrdersPage = () => {
             )}
           </div>
           <div className="rounded-xl border border-rose-100 bg-rose-50/70 p-4 text-sm text-rose-800 shadow-inner">
-            Filtros activos: {statusFilter === "todos" ? "mostrando todos" : statusFilter}.
+            Agrega filtros por estado (pendiente, hecho, cancelado) y acciones rapidas para cada pedido.
           </div>
         </div>
       </section>

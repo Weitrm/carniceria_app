@@ -51,7 +51,7 @@ export const Login = () => {
               <div className="flex items-center gap-2">
                 <img src="/logo.svg" alt="Carniceria FMP" className="h-10 w-10" />
                 <p className="text-sm font-semibold uppercase tracking-[0.25em] text-rose-500">
-                  Carniceria FMP
+                  Carniceria <span className="text-emerald-700">FMP</span>
                 </p>
               </div>
               <p className="text-sm font-semibold uppercase tracking-[0.25em] text-rose-500">

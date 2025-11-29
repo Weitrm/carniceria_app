@@ -70,7 +70,7 @@ export const Register = () => {
               <div className="flex items-center gap-2 justify-center mb-4">
                 <img src="/logo.svg" alt="Carniceria FMP" className="h-10 w-10" />
                 <p className="text-sm font-bold uppercase tracking-[0.25em] text-rose-500">
-                  Carniceria <span className="text-emerald-800 ml-2">FMP</span>
+                  Carniceria <span className="text-emerald-700">FMP</span>
                 </p>
               </div>
               <h2 className="text-3xl font-bold text-slate-900">

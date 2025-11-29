@@ -23,7 +23,7 @@ export const SessionHeader = () => {
       >
         <div className="flex items-center gap-1">
           <img src="../logo.svg" alt="logo" className="w-10 h-10" />
-          <h1 className="font-bold">Carniceria FMP</h1>
+          <h1 className="font-bold">Carniceria <span className="text-emerald-700">FMP</span></h1>
         </div>
       </Link>
       <div className="flex items-center gap-3 text-sm text-slate-700">

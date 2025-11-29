@@ -85,6 +85,9 @@ export const UserOrdersHistory = () => {
     if (page > totalPages) setPage(totalPages);
   }, [page, totalPages]);
 
+  const fromRow = filtered.length === 0 ? 0 : (page - 1) * perPage + 1;
+  const toRow = Math.min(page * perPage, filtered.length);
+
   return (
     <AppShell>
       <SessionHeader />
@@ -205,7 +208,7 @@ export const UserOrdersHistory = () => {
               ))}
               <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-3 text-xs text-slate-600">
                 <span>
-                  Página {page} de {totalPages}
+                  Página {page} de {totalPages} · Mostrando {fromRow === 0 ? 0 : fromRow}-{toRow} de {filtered.length}
                 </span>
                 <div className="flex items-center gap-2">
                   <button

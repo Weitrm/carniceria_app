@@ -46,7 +46,8 @@ export interface Order {
   userId: string;
   items: OrderItem[];
   status: OrderStatus;
-  createdAt: string; 
+  createdAt: string;
+  updatedAt: string;
 }
 
 export type CartLine = OrderItem & {

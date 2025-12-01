@@ -202,7 +202,7 @@ export const UserOrdersHistory = () => {
                     </div>
                   </div>
                   <div className="text-xs text-slate-500 sm:text-right">
-                    Última actualización: {new Date(order.createdAt).toLocaleString()}
+                    Última actualización: {new Date(order.updatedAt).toLocaleString()}
                   </div>
                 </article>
               ))}

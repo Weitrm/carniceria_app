@@ -20,7 +20,11 @@ const loadOrders = (): Order[] => {
   if (!raw) return DEFAULT_ORDERS;
   try {
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : DEFAULT_ORDERS;
+    if (!Array.isArray(parsed)) return DEFAULT_ORDERS;
+    return parsed.map((order) => ({
+      ...order,
+      updatedAt: order.updatedAt ?? order.createdAt ?? new Date().toISOString(),
+    }));
   } catch {
     return DEFAULT_ORDERS;
   }
@@ -41,12 +45,14 @@ export const ordersStore = create<OrdersState>((set) => ({
     set((state) => {
       const sanitizedItems = data.items.filter((item) => item.cantidadKg > 0);
       if (sanitizedItems.length === 0) return state;
+      const now = new Date().toISOString();
       const order: Order = {
         id: createId(),
         userId: data.userId,
         items: sanitizedItems,
         status: "pendiente",
-        createdAt: new Date().toISOString(),
+        createdAt: now,
+        updatedAt: now,
       };
       const orders = [order, ...state.orders];
       persistOrders(orders);
@@ -54,8 +60,9 @@ export const ordersStore = create<OrdersState>((set) => ({
     }),
   updateStatus: (id, status) =>
     set((state) => {
+      const now = new Date().toISOString();
       const orders = state.orders.map((order) =>
-        order.id === id ? { ...order, status } : order
+        order.id === id ? { ...order, status, updatedAt: now } : order
       );
       persistOrders(orders);
       return { orders };

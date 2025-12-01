@@ -249,6 +249,9 @@ export const AdminOrdersPage = () => {
                         <p className="text-xs text-slate-500">
                           Creado: {new Date(order.createdAt).toLocaleString()}
                         </p>
+                        <p className="text-xs text-slate-500">
+                          Actualizado: {new Date(order.updatedAt).toLocaleString()}
+                        </p>
                       </div>
                       <ul className="space-y-1 text-xs text-slate-700">
                         {order.items.map((item) => (
@@ -322,7 +325,8 @@ export const AdminOrdersPage = () => {
             )}
           </div>
           <div className="rounded-xl border border-rose-100 bg-rose-50/70 p-4 text-sm text-rose-800 shadow-inner">
-            Historial filtrado por estado, funcionario y fechas. Ordenado del más reciente al más antiguo. Límite de 5 pedidos por página.
+            Historial filtrado por estado, funcionario y fechas. Ordenado del más reciente al más antiguo.
+            Límite de 5 pedidos por página.
           </div>
         </div>
       </section>

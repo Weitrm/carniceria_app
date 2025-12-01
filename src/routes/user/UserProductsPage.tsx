@@ -62,7 +62,7 @@ export const UserProductsPage = () => {
         <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-wide text-rose-500">
-              Catalogo
+              Catálogo
             </p>
             <h1 className="text-2xl font-bold text-slate-900">Productos disponibles</h1>
             <p className="mt-1 text-sm text-slate-600">
@@ -103,7 +103,7 @@ export const UserProductsPage = () => {
 
         {activeProducts.length === 0 ? (
           <div className="mt-6 rounded-xl border border-slate-100 bg-white p-6 text-sm text-slate-700 shadow-sm">
-            No hay productos activos. Cuando el administrador active cortes, apareceran aqui.
+            No hay productos activos. Cuando el administrador active cortes, aparecerán aquí.
           </div>
         ) : (
           <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

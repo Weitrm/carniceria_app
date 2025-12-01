@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "../../components/layout/AppShell";
 import { SessionHeader } from "../../components/shared/SessionHeader";
 import ordersStore from "../../store/ordersStore";
@@ -202,13 +202,13 @@ export const UserOrdersHistory = () => {
                     </div>
                   </div>
                   <div className="text-xs text-slate-500 sm:text-right">
-                    Última actualización: {new Date(order.updatedAt).toLocaleString()}
+                    Ultima actualizacion: {new Date(order.updatedAt).toLocaleString()}
                   </div>
                 </article>
               ))}
               <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-3 text-xs text-slate-600">
                 <span>
-                  Página {page} de {totalPages} · Mostrando {fromRow === 0 ? 0 : fromRow}-{toRow} de {filtered.length}
+                  Pagina {page} de {totalPages} - Mostrando {fromRow === 0 ? 0 : fromRow}-{toRow} de {filtered.length}
                 </span>
                 <div className="flex items-center gap-2">
                   <button
@@ -234,3 +234,4 @@ export const UserOrdersHistory = () => {
     </AppShell>
   );
 };
+

@@ -74,11 +74,11 @@ export const UserCartPage = () => {
       return;
     }
     if (totals.productCount > 2) {
-      setFeedback("Máximo 2 productos por pedido.");
+      setFeedback("Maximo 2 productos por pedido.");
       return;
     }
     if (totals.totalKg > 8) {
-      setFeedback("Máximo 8 kg en total. Ajusta cantidades antes de enviar.");
+      setFeedback("Maximo 8 kg en total. Ajusta cantidades antes de enviar.");
       return;
     }
     addOrder({
@@ -116,12 +116,12 @@ export const UserCartPage = () => {
             </p>
             <h1 className="text-2xl font-bold text-slate-900">Resumen de pedido</h1>
             <p className="mt-1 text-sm text-slate-600">
-              Máximo 8 kg totales y hasta 2 productos. Confirma cantidades antes de enviar.
+              Maximo 8 kg totales y hasta 2 productos. Confirma cantidades antes de enviar.
             </p>
           </div>
           <div className="flex w-full flex-col gap-2 sm:w-auto sm:items-end">
             <span className="inline-flex justify-center rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
-              En revisión
+              En revision
             </span>
             <button
               onClick={() => navigate("/user/products")}
@@ -143,7 +143,7 @@ export const UserCartPage = () => {
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  Estado de tu último pedido
+                  Estado de tu ultimo pedido
                 </p>
                 <p className="text-xs text-slate-500">
                   Enviado: {new Date(lastUserOrder.createdAt).toLocaleString()}
@@ -162,7 +162,7 @@ export const UserCartPage = () => {
           <div className="rounded-xl border border-slate-100 bg-white p-4 text-sm text-slate-700 shadow-sm lg:col-span-2">
             {isCartEmpty ? (
               <div>
-                Aún no hay productos en el carrito. Regresa al catálogo y agrega los cortes para este pedido.
+                Aun no hay productos en el carrito. Regresa al catalogo y agrega los cortes para este pedido.
               </div>
             ) : (
               <div className="space-y-3">
@@ -256,8 +256,8 @@ export const UserCartPage = () => {
             </div>
             {(overProducts || overKg) && (
               <div className="mt-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700">
-                {overProducts && <div>Máximo 2 productos por pedido.</div>}
-                {overKg && <div>Máximo 8 kg totales. Reduce cantidades.</div>}
+                {overProducts && <div>Maximo 2 productos por pedido.</div>}
+                {overKg && <div>Maximo 8 kg totales. Reduce cantidades.</div>}
               </div>
             )}
             <div className="mt-2 flex items-center justify-between text-slate-800">

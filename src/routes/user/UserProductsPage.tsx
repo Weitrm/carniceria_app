@@ -17,6 +17,11 @@ type Feedback =
   | { type: "success"; message: string }
   | { type: "error"; message: string };
 
+type AddInfo = {
+  allowedKg: number;
+  reason: string | null;
+};
+
 export const UserProductsPage = () => {
   const navigate = useNavigate();
   const products = productsStore((s) => s.products);
@@ -30,17 +35,17 @@ export const UserProductsPage = () => {
     return { totalKg, productCount: items.length };
   }, [items]);
 
-  const canAddInfo = (productId: string, maxKg: number) => {
+  const canAddInfo = (productId: string, maxKg: number): AddInfo => {
     const existing = items.find((it) => it.productId === productId);
     if (!existing && items.length >= 2) {
-      return { allowedKg: 0, reason: "Máximo 2 productos por pedido." };
+      return { allowedKg: 0, reason: "Maximo 2 productos por pedido." };
     }
     const currentQty = existing?.cantidadKg ?? 0;
     const totalWithoutProduct = totals.totalKg - currentQty;
     const remainingKg = Math.max(0, 8 - totalWithoutProduct);
     const allowedForProduct = Math.min(maxKg - currentQty, remainingKg);
     if (allowedForProduct <= 0) {
-      return { allowedKg: 0, reason: "Máximo 8 kg en total. Ajusta cantidades." };
+      return { allowedKg: 0, reason: "Maximo 8 kg en total. Ajusta cantidades." };
     }
     return { allowedKg: allowedForProduct, reason: null };
   };
@@ -48,7 +53,10 @@ export const UserProductsPage = () => {
   const handleAdd = (productId: string, maxKg: number) => {
     const info = canAddInfo(productId, maxKg);
     if (info.allowedKg <= 0) {
-      setFeedback({ type: "error", message: info.reason || "No puedes agregar más de este producto." });
+      setFeedback({
+        type: "error",
+        message: info.reason || "No puedes agregar mas de este producto.",
+      });
       return;
     }
     addToCart({ productId, cantidadKg: 1 }, maxKg);
@@ -62,11 +70,11 @@ export const UserProductsPage = () => {
         <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-wide text-rose-500">
-              Catálogo
+              Catalogo
             </p>
             <h1 className="text-2xl font-bold text-slate-900">Productos disponibles</h1>
             <p className="mt-1 text-sm text-slate-600">
-              Máximo 8 kg por pedido y hasta 2 productos distintos.
+              Maximo 8 kg por pedido y hasta 2 productos distintos.
             </p>
           </div>
           <div className="flex flex-col items-end gap-2 text-right">
@@ -78,7 +86,7 @@ export const UserProductsPage = () => {
             </span>
             <button
               onClick={() => navigate("/user/cart")}
-              className="w-full rounded-lg bg-emerald-200 border border-emerald-200 px-3 py-2 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-50 sm:w-auto"
+              className="w-full rounded-lg border border-emerald-200 bg-emerald-200 px-3 py-2 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-50 sm:w-auto"
             >
               Ir al carrito
             </button>
@@ -94,13 +102,12 @@ export const UserProductsPage = () => {
             }`}
           >
             <span>{feedback.message}</span>
-            {feedback.type === "success"}
           </div>
         )}
 
         {activeProducts.length === 0 ? (
           <div className="mt-6 rounded-xl border border-slate-100 bg-white p-6 text-sm text-slate-700 shadow-sm">
-            No hay productos activos. Cuando el administrador active cortes, aparecerán aquí.
+            No hay productos activos. Cuando el administrador active cortes, apareceran aqui.
           </div>
         ) : (
           <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -133,7 +140,7 @@ export const UserProductsPage = () => {
                       disabled={info.allowedKg <= 0}
                       className="w-full rounded-lg bg-rose-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:bg-rose-200"
                     >
-                      {info.allowedKg <= 0 ? "Límite alcanzado" : "Agregar al carrito"}
+                      {info.allowedKg <= 0 ? "Limite alcanzado" : "Agregar al carrito"}
                     </button>
                   </div>
                 </article>

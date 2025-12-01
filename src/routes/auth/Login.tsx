@@ -1,5 +1,9 @@
-﻿import { Link } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
+import authStore from "../../store/authStore";
+import { loadUsers } from "../../lib/userStorage";
+import { isValidEmail } from "../../lib/validation";
 
 type LoginFormValues = {
   email: string;
@@ -8,58 +12,48 @@ type LoginFormValues = {
 };
 
 export const Login = () => {
+  const navigate = useNavigate();
+  const login = authStore((state) => state.login);
+  const [formError, setFormError] = useState("");
+
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<LoginFormValues>({
     defaultValues: { remember: true },
-    
   });
 
   const onSubmit = handleSubmit(async (values) => {
-    /*TODO: Integrar con el backend o el store de autenticación.*/
-    console.log("Iniciando sesión con:", values);
+    const users = loadUsers();
+    const found = users.find(
+      (u) => u.email === values.email && u.password === values.password
+    );
+
+    if (!found) {
+      setFormError("Credenciales incorrectas");
+      return;
+    }
+
+    login({ id: found.id, nombre: found.name, role: found.role }, values.remember);
+    navigate(
+      found.role === "admin" ? "/admin/products" : "/user/products",
+      { replace: true }
+    );
   });
 
   return (
     <main className="min-h-screen bg-linear-to-br from-rose-50 via-white to-amber-50 text-slate-900">
-      <div className="mx-auto flex min-h-screen max-w-6xl flex-col lg:flex-row">
-        <section className="flex flex-1 flex-col justify-center gap-6 px-8 py-12 lg:px-12">
-          <p className="text-sm flex justify-center font-semibold uppercase tracking-[0.25em] text-rose-500">
-            Carnicería <span className="text-green-800 ml-2">FMP</span>
-          </p>
-          <h1 className="text-4xl flex justify-center font-bold text-slate-900 sm:text-5xl">
-            Panel de acceso
-          </h1>
-          <p className="max-w-xl text-lg flex justify-center text-slate-600">
-            Registrate para realizar tu pedido
-          </p>
-          <div className="grid grid-cols-1 gap-4 text-sm text-slate-700 sm:grid-cols-2">
-            <article className="flex items-start gap-3 rounded-xl bg-white/80 p-4 shadow-sm ring-1 ring-rose-100">
-              <span className="mt-0.5 flex h-8 w-8 items-center justify-center rounded-full bg-rose-100 text-sm font-semibold text-rose-600">
-                1
-              </span>
-              <div className="space-y-1">
-                <h3 className="font-semibold">Observa los productos disponibles.</h3>
-                <p className="text-slate-500">Podes ver la carne que hay disponible cada semana.</p>
-              </div>
-            </article>
-            <article className="flex items-start gap-3 rounded-xl bg-white/80 p-4 shadow-sm ring-1 ring-rose-100">
-              <span className="mt-0.5 flex h-8 w-8 items-center justify-center rounded-full bg-rose-100 text-sm font-semibold text-rose-600">
-                2
-              </span>
-              <div className="space-y-1">
-                <h3 className="font-semibold">Realiza tu pedido rapido</h3>
-                <p className="text-slate-500">Agrega a tu pedido el corte y cantidad que tengas disponible.</p>
-              </div>
-            </article>
-          </div>
-        </section>
-
-        <section className="flex flex-1 items-center justify-center bg-white/70 px-8 py-12 backdrop-blur lg:px-12">
+      <div className="mx-auto flex min-h-screen max-w-6xl flex-col px-4 sm:px-6 lg:flex-row">
+        <section className="flex flex-1 items-center justify-center bg-white/70 px-6 py-12 backdrop-blur sm:px-8 lg:px-12">
           <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-xl ring-1 ring-rose-100">
             <header className="mb-8 space-y-2">
+              <div className="flex items-center gap-2">
+                <img src="/logo.svg" alt="Carniceria FMP" className="h-10 w-10" />
+                <p className="text-sm font-semibold uppercase tracking-[0.25em] text-rose-500">
+                  Carniceria <span className="text-emerald-700">FMP</span>
+                </p>
+              </div>
               <p className="text-sm font-semibold uppercase tracking-[0.25em] text-rose-500">
                 Bienvenido de nuevo
               </p>
@@ -89,7 +83,7 @@ export const Login = () => {
                   {...register("email", {
                     required: "Ingresa tu correo",
                     pattern: {
-                      value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                      value: isValidEmail.regex,
                       message: "Correo no válido",
                     },
                   })}
@@ -122,7 +116,7 @@ export const Login = () => {
                     },
                   })}
                   className="w-full rounded-xl border border-rose-100 bg-white px-4 py-3 text-sm shadow-sm outline-none transition focus:border-rose-300 focus:ring-2 focus:ring-rose-200"
-                  placeholder="••••••••"
+                  placeholder="********"
                 />
               </div>
 
@@ -138,10 +132,17 @@ export const Login = () => {
                 <button
                   type="button"
                   className="font-semibold text-rose-600 transition hover:text-rose-700"
+                  onClick={() => setFormError("Solicita el reseteo al administrador.")}
                 >
                   ¿Olvidaste tu contraseña?
                 </button>
               </div>
+
+              {formError && (
+                <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
+                  {formError}
+                </div>
+              )}
 
               <button
                 type="submit"
@@ -153,7 +154,7 @@ export const Login = () => {
             </form>
 
             <p className="mt-6 text-center text-sm text-slate-600">
-              ¿Aún no tienes cuenta? {" "}
+              ¿Aún no tienes cuenta?{" "}
               <Link
                 to="/register"
                 className="font-semibold text-rose-600 transition hover:text-rose-700"

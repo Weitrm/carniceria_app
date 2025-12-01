@@ -1,166 +1,78 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
-
-type RegisterFormValues = {
-  nombre: string;
-  email: string;
-  legajo: string;
-  password: string;
-  repeatPassword: string;
-};
-
-type StoredUser = {
-  id: string;
-  nombre: string;
-  email: string;
-  legajo: string;
-  password: string;
-  role: "operario" | "admin";
-};
-
-const USERS_STORAGE_KEY = "carniceria_users";
-const CURRENT_USER_KEY = "carniceria_currentUser";
-const DEFAULT_ADMIN_USER: StoredUser = {
-  id: "admin-001",
-  nombre: "Administrador",
-  email: "admin@carniceria.com",
-  legajo: "000",
-  password: "admin123",
-  role: "admin",
-};
-
-const generateId = () => {
-  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
-    return crypto.randomUUID();
-  }
-  return `user_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-};
-
-const readPersistedUsers = (): StoredUser[] => {
-  const raw = localStorage.getItem(USERS_STORAGE_KEY);
-
-  if (!raw) {
-    return [DEFAULT_ADMIN_USER];
-  }
-
-  try {
-    const parsed = JSON.parse(raw) as StoredUser[];
-    const alreadyHasAdmin = parsed.some(
-      (user) => user.email === DEFAULT_ADMIN_USER.email
-    );
-    return alreadyHasAdmin ? parsed : [...parsed, DEFAULT_ADMIN_USER];
-  } catch {
-    return [DEFAULT_ADMIN_USER];
-  }
-};
-
-const persistUsers = (users: StoredUser[]) => {
-  const alreadyHasAdmin = users.some(
-    (user) => user.email === DEFAULT_ADMIN_USER.email
-  );
-  const sanitizedUsers = alreadyHasAdmin
-    ? users
-    : [...users, DEFAULT_ADMIN_USER];
-
-  localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(sanitizedUsers));
-};
+import { loadUsers, saveUsers } from "../../lib/userStorage";
+import type { StoredUser } from "../../lib/types";
+import { hasMinLength, isValidEmail } from "../../lib/validation";
 
 export const Register = () => {
   const navigate = useNavigate();
-  const [formError, setFormError] = useState<string | null>(null);
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<RegisterFormValues>();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [funcionario, setFuncionario] = useState("");
+  const [password, setPassword] = useState("");
+  const [repeatPassword, setRepeatPassword] = useState("");
+  const [formError, setFormError] = useState("");
+  const [success, setSuccess] = useState("");
 
-  const onSubmit = handleSubmit(async (values) => {
-    setFormError(null);
+  const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setSuccess("");
 
-    const trimmedNombre = values.nombre.trim();
-    const trimmedEmail = values.email.trim().toLowerCase();
-    const trimmedLegajo = values.legajo.trim();
-
-    if (values.password !== values.repeatPassword) {
-      setFormError("Las contrasenas no coinciden.");
+    if (!name || !email || !funcionario || !password || !repeatPassword) {
+      setFormError("Todos los campos son obligatorios");
       return;
     }
 
-    const persistedUsers = readPersistedUsers();
-    const emailAlreadyExists = persistedUsers.some(
-      (user) => user.email.toLowerCase() === trimmedEmail
-    );
+    if (!isValidEmail.test(email)) {
+      setFormError("El email no parece válido");
+      return;
+    }
 
-    if (emailAlreadyExists) {
-      setFormError("Ya existe un usuario registrado con ese correo.");
+    if (!hasMinLength(password, 6)) {
+      setFormError("La contraseña debe tener al menos 6 caracteres");
+      return;
+    }
+
+    if (password !== repeatPassword) {
+      setFormError("Las contraseñas no coinciden");
+      return;
+    }
+
+    const users = loadUsers();
+    if (users.some((u) => u.email === email)) {
+      setFormError("Ese correo ya está registrado");
       return;
     }
 
     const newUser: StoredUser = {
-      id: generateId(),
-      nombre: trimmedNombre,
-      email: trimmedEmail,
-      legajo: trimmedLegajo,
-      password: values.password,
+      id: crypto.randomUUID(),
+      name,
+      email,
+      funcionario,
+      password,
       role: "operario",
     };
 
-    const updatedUsers = [...persistedUsers, newUser];
-
-    persistUsers(updatedUsers);
-    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(newUser));
-
-    navigate("/user/products", { replace: true });
-  });
+    saveUsers([...users, newUser]);
+    setFormError("");
+    setSuccess("Cuenta creada. Te redirigimos al login...");
+    setTimeout(() => {
+      navigate("/login", { replace: true });
+    }, 1200);
+  };
 
   return (
     <main className="min-h-screen bg-linear-to-br from-rose-50 via-white to-amber-50 text-slate-900">
-      <div className="mx-auto flex min-h-screen max-w-6xl flex-col lg:flex-row">
-        <section className="flex flex-1 flex-col justify-center gap-6 px-8 py-12 lg:px-12">
-          <p className="text-sm font-semibold uppercase tracking-[0.25em] text-rose-500">
-            Carniceria Los Andes
-          </p>
-          <h1 className="text-4xl font-bold text-slate-900 sm:text-5xl">
-            Crear nuevo usuario
-          </h1>
-          <p className="max-w-xl text-lg text-slate-600">
-            Registra a tus operarios para que puedan gestionar pedidos y
-            productos desde cualquier lugar.
-          </p>
-          <div className="grid grid-cols-1 gap-4 text-sm text-slate-700 sm:grid-cols-2">
-            <article className="flex items-start gap-3 rounded-xl bg-white/80 p-4 shadow-sm ring-1 ring-rose-100">
-              <span className="mt-0.5 flex h-8 w-8 items-center justify-center rounded-full bg-rose-100 text-sm font-semibold text-rose-600">
-                1
-              </span>
-              <div className="space-y-1">
-                <h3 className="font-semibold">Todo en orden</h3>
-                <p className="text-slate-500">
-                  Seguimiento de pedidos y clientes en un solo panel.
-                </p>
-              </div>
-            </article>
-            <article className="flex items-start gap-3 rounded-xl bg-white/80 p-4 shadow-sm ring-1 ring-rose-100">
-              <span className="mt-0.5 flex h-8 w-8 items-center justify-center rounded-full bg-rose-100 text-sm font-semibold text-rose-600">
-                2
-              </span>
-              <div className="space-y-1">
-                <h3 className="font-semibold">Operarios conectados</h3>
-                <p className="text-slate-500">
-                  Cada usuario tiene su perfil y accesos personalizados.
-                </p>
-              </div>
-            </article>
-          </div>
-        </section>
-
-        <section className="flex flex-1 items-center justify-center bg-white/70 px-8 py-12 backdrop-blur lg:px-12">
+      <div className="mx-auto flex min-h-screen max-w-6xl flex-col px-4 sm:px-6 lg:flex-row">
+        <section className="flex flex-1 items-center justify-center bg-white/70 px-6 py-12 backdrop-blur sm:px-8 lg:px-12">
           <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-xl ring-1 ring-rose-100">
             <header className="mb-8 space-y-2">
-              <p className="text-sm font-semibold uppercase tracking-[0.25em] text-rose-500">
-                Registro interno
-              </p>
+              <div className="flex items-center gap-2 justify-center mb-4">
+                <img src="/logo.svg" alt="Carniceria FMP" className="h-10 w-10" />
+                <p className="text-sm font-bold uppercase tracking-[0.25em] text-rose-500">
+                  Carniceria <span className="text-emerald-700">FMP</span>
+                </p>
+              </div>
               <h2 className="text-3xl font-bold text-slate-900">
                 Crear cuenta operario
               </h2>
@@ -170,30 +82,31 @@ export const Register = () => {
             </header>
 
             {formError && (
-              <div className="mb-6 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
+              <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
                 {formError}
+              </div>
+            )}
+
+            {success && (
+              <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
+                {success}
               </div>
             )}
 
             <form className="space-y-5" onSubmit={onSubmit}>
               <div className="space-y-2">
                 <label
-                  htmlFor="nombre"
+                  htmlFor="name"
                   className="flex items-center justify-between text-sm font-medium text-slate-700"
                 >
                   Nombre completo
-                  {errors.nombre && (
-                    <span className="text-xs font-semibold text-rose-600">
-                      {errors.nombre.message}
-                    </span>
-                  )}
                 </label>
                 <input
-                  id="nombre"
+                  id="name"
                   type="text"
-                  {...register("nombre", { required: "Indicá el nombre" })}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
                   className="w-full rounded-xl border border-rose-100 bg-white px-4 py-3 text-sm shadow-sm outline-none transition focus:border-rose-300 focus:ring-2 focus:ring-rose-200"
-                  placeholder="Nombre y apellido"
                 />
               </div>
 
@@ -202,51 +115,31 @@ export const Register = () => {
                   htmlFor="email"
                   className="flex items-center justify-between text-sm font-medium text-slate-700"
                 >
-                  Correo electronico
-                  {errors.email && (
-                    <span className="text-xs font-semibold text-rose-600">
-                      {errors.email.message}
-                    </span>
-                  )}
+                  Correo electrónico
                 </label>
                 <input
                   id="email"
                   type="email"
-                  autoComplete="email"
-                  {...register("email", {
-                    required: "Ingresa un correo",
-                    pattern: {
-                      value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                      message: "Correo invalido",
-                    },
-                  })}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="w-full rounded-xl border border-rose-100 bg-white px-4 py-3 text-sm shadow-sm outline-none transition focus:border-rose-300 focus:ring-2 focus:ring-rose-200"
-                  placeholder="operario@carniceria.com"
                 />
               </div>
 
               <div className="space-y-2">
                 <label
-                  htmlFor="legajo"
+                  htmlFor="funcionario"
                   className="flex items-center justify-between text-sm font-medium text-slate-700"
                 >
                   Número de funcionario
-                  {errors.legajo && (
-                    <span className="text-xs font-semibold text-rose-600">
-                      {errors.legajo.message}
-                    </span>
-                  )}
                 </label>
                 <input
-                  id="legajo"
+                  id="funcionario"
                   type="text"
-                  inputMode="numeric"
-                  {...register("legajo", {
-                    required: "Ingresa el legajo",
-                    minLength: { value: 3, message: "Mínimo 3 dígitos" },
-                  })}
+                  value={funcionario}
+                  onChange={(e) => setFuncionario(e.target.value)}
                   className="w-full rounded-xl border border-rose-100 bg-white px-4 py-3 text-sm shadow-sm outline-none transition focus:border-rose-300 focus:ring-2 focus:ring-rose-200"
-                  placeholder="12345"
+                  placeholder="123"
                 />
               </div>
 
@@ -256,23 +149,12 @@ export const Register = () => {
                   className="flex items-center justify-between text-sm font-medium text-slate-700"
                 >
                   Contraseña
-                  {errors.password && (
-                    <span className="text-xs font-semibold text-rose-600">
-                      {errors.password.message}
-                    </span>
-                  )}
                 </label>
                 <input
                   id="password"
                   type="password"
-                  autoComplete="new-password"
-                  {...register("password", {
-                    required: "Definí una contraseña",
-                    minLength: {
-                      value: 6,
-                      message: "Mínimo 6 caracteres",
-                    },
-                  })}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   className="w-full rounded-xl border border-rose-100 bg-white px-4 py-3 text-sm shadow-sm outline-none transition focus:border-rose-300 focus:ring-2 focus:ring-rose-200"
                   placeholder="********"
                 />
@@ -284,23 +166,12 @@ export const Register = () => {
                   className="flex items-center justify-between text-sm font-medium text-slate-700"
                 >
                   Repetir contraseña
-                  {errors.repeatPassword && (
-                    <span className="text-xs font-semibold text-rose-600">
-                      {errors.repeatPassword.message}
-                    </span>
-                  )}
                 </label>
                 <input
                   id="repeatPassword"
                   type="password"
-                  autoComplete="new-password"
-                  {...register("repeatPassword", {
-                    required: "Repetí la contraseña",
-                    minLength: {
-                      value: 6,
-                      message: "Mínimo 6 caracteres",
-                    },
-                  })}
+                  value={repeatPassword}
+                  onChange={(e) => setRepeatPassword(e.target.value)}
                   className="w-full rounded-xl border border-rose-100 bg-white px-4 py-3 text-sm shadow-sm outline-none transition focus:border-rose-300 focus:ring-2 focus:ring-rose-200"
                   placeholder="********"
                 />
@@ -308,10 +179,9 @@ export const Register = () => {
 
               <button
                 type="submit"
-                disabled={isSubmitting}
                 className="w-full rounded-xl bg-rose-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-rose-200 transition hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-300 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {isSubmitting ? "Registrando..." : "Crear cuenta"}
+                Crear cuenta
               </button>
             </form>
 

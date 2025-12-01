@@ -1,14 +1,24 @@
 import { Navigate } from "react-router-dom";
-import useAuthStore from "../../store/authStore";
+import type { ReactNode } from "react";
+import authStore from "../../store/authStore";
+import type { UserRole } from "../../lib/types";
 
-export const ProtectedRoute = ({ allowedRoles, children }) => {
-  const user = useAuthStore(state => state.user);
+type Props = {
+  allowedRoles: UserRole[];
+  children: ReactNode;
+};
 
-  if (!user) return <Navigate to="/login" />;
+export const ProtectedRoute = ({ allowedRoles, children }: Props) => {
+  const user = authStore((state) => state.user);
 
-  if (!allowedRoles.includes(user.role)) {
-    return <Navigate to="/login" />;
+  if (!user) {
+    return <Navigate to="/login" replace />;
   }
 
-  return children;
+  if (!allowedRoles.includes(user.role)) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return <>{children}</>;
 }
+

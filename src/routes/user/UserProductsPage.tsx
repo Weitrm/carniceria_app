@@ -74,14 +74,11 @@ export const UserProductsPage = () => {
               Operario
             </span>
             <span className="text-xs text-slate-500">
-              {activeProducts.length} activos / {products.length} totales
-            </span>
-            <span className="text-xs text-slate-500">
               En carrito: {totals.productCount} productos, {totals.totalKg} kg
             </span>
             <button
               onClick={() => navigate("/user/cart")}
-              className="w-full rounded-lg border border-emerald-200 bg-white px-3 py-2 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-50 sm:w-auto"
+              className="w-full rounded-lg bg-emerald-200 border border-emerald-200 px-3 py-2 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-50 sm:w-auto"
             >
               Ir al carrito
             </button>

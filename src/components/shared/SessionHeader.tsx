@@ -30,6 +30,12 @@ export const SessionHeader = () => {
         {!isAdmin && (
           <>
             <Link
+              to="/user/products"
+              className="rounded-lg border border-rose-100 px-3 py-1 text-xs font-semibold text-rose-700 transition hover:bg-rose-50"
+            >
+              Catálogo
+            </Link>
+            <Link
               to="/user/history"
               className="rounded-lg border border-rose-100 px-3 py-1 text-xs font-semibold text-rose-700 transition hover:bg-rose-50"
             >

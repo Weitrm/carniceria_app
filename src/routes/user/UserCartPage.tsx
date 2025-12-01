@@ -52,6 +52,21 @@ export const UserCartPage = () => {
     updateCantidad(productId, value, maxKg);
   };
 
+  const handleAdjustQty = (
+    productId: string,
+    currentValue: number,
+    delta: number,
+    maxKg: number
+  ) => {
+    const nextValue = Math.round(Math.max(0, Math.min(currentValue + delta, maxKg)) * 2) / 2;
+    handleUpdateQty(productId, nextValue, maxKg);
+  };
+
+  const handleInputQty = (productId: string, rawValue: number, maxKg: number) => {
+    const clamped = Math.round(Math.max(0, Math.min(rawValue, maxKg)) * 2) / 2;
+    handleUpdateQty(productId, clamped, maxKg);
+  };
+
   const handleSend = () => {
     if (!user) return;
     if (detailedItems.length === 0) {
@@ -165,25 +180,57 @@ export const UserCartPage = () => {
                         Precio: {currencyFormat(item.product.precioPorKg)} /kg
                       </p>
                     </div>
-                    <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center">
-                      <label className="text-xs font-semibold text-slate-700">
-                        Kg:
-                        <input
-                          type="number"
-                          min={0}
-                          step={0.5}
-                          max={item.product.maxKgPorPersona}
-                          value={item.cantidadKg}
-                          onChange={(e) =>
-                            handleUpdateQty(
+                    <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
+                      <div className="flex items-center gap-3 rounded-xl bg-white px-3 py-2 shadow-sm ring-1 ring-rose-100">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleAdjustQty(
                               item.productId,
-                              Number(e.target.value),
+                              item.cantidadKg,
+                              -0.5,
                               item.product.maxKgPorPersona
                             )
                           }
-                          className="ml-2 w-24 rounded-lg border border-rose-100 bg-white px-2 py-1 text-sm shadow-sm outline-none focus:border-rose-300 focus:ring-2 focus:ring-rose-200"
-                        />
-                      </label>
+                          className="flex h-10 w-10 items-center justify-center rounded-full bg-rose-50 text-xl font-bold text-rose-600 transition hover:-translate-y-0.5 hover:bg-rose-100 hover:shadow"
+                          aria-label={`Disminuir kilos de ${item.product.nombre}`}
+                        >
+                          -
+                        </button>
+                        <label className="text-xs font-semibold text-slate-700">
+                          Kg
+                          <input
+                            type="number"
+                            min={0}
+                            step={0.5}
+                            max={item.product.maxKgPorPersona}
+                            value={item.cantidadKg}
+                            onChange={(e) =>
+                              handleInputQty(
+                                item.productId,
+                                Number(e.target.value),
+                                item.product.maxKgPorPersona
+                              )
+                            }
+                            className="ml-2 w-28 rounded-lg border-2 border-rose-200 bg-rose-50 px-3 py-2 text-lg font-semibold text-slate-900 shadow-inner outline-none transition focus:border-rose-300 focus:ring-4 focus:ring-rose-100"
+                          />
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleAdjustQty(
+                              item.productId,
+                              item.cantidadKg,
+                              0.5,
+                              item.product.maxKgPorPersona
+                            )
+                          }
+                          className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50 text-xl font-bold text-emerald-600 transition hover:-translate-y-0.5 hover:bg-emerald-100 hover:shadow"
+                          aria-label={`Aumentar kilos de ${item.product.nombre}`}
+                        >
+                          +
+                        </button>
+                      </div>
                       <span className="text-sm font-semibold text-slate-900">
                         {currencyFormat(item.subtotal)}
                       </span>

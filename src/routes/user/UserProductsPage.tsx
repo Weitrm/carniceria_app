@@ -4,6 +4,8 @@ import { AppShell } from "../../components/layout/AppShell";
 import { SessionHeader } from "../../components/shared/SessionHeader";
 import productsStore from "../../store/productsStore";
 import cartStore from "../../store/cartStore";
+import ordersStore from "../../store/ordersStore";
+import authStore from "../../store/authStore";
 
 const currencyFormat = (value: number) =>
   new Intl.NumberFormat("es-UY", {
@@ -24,11 +26,17 @@ type AddInfo = {
 
 export const UserProductsPage = () => {
   const navigate = useNavigate();
+  const user = authStore((s) => s.user);
   const products = productsStore((s) => s.products);
   const items = cartStore((s) => s.items);
   const addToCart = cartStore((s) => s.addItem);
+  const getOrderBlock = ordersStore((s) => s.getOrderBlock);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const activeProducts = products.filter((p) => p.isActive);
+  const orderBlock = useMemo(() => {
+    if (!user) return null;
+    return getOrderBlock(user.id);
+  }, [getOrderBlock, user]);
 
   const totals = useMemo(() => {
     const totalKg = items.reduce((sum, it) => sum + it.cantidadKg, 0);
@@ -36,6 +44,14 @@ export const UserProductsPage = () => {
   }, [items]);
 
   const canAddInfo = (productId: string, maxKg: number): AddInfo => {
+    if (orderBlock) {
+      const nextText = new Date(orderBlock.nextAllowedAt).toLocaleDateString("es-UY");
+      const statusText = orderBlock.order.status === "hecho" ? "completado" : "pendiente";
+      return {
+        allowedKg: 0,
+        reason: `No puedes agregar productos. Tu ultimo pedido (${statusText}) permite otro recien el ${nextText}.`,
+      };
+    }
     const existing = items.find((it) => it.productId === productId);
     if (!existing && items.length >= 2) {
       return { allowedKg: 0, reason: "Maximo 2 productos por pedido." };
@@ -51,6 +67,14 @@ export const UserProductsPage = () => {
   };
 
   const handleAdd = (productId: string, maxKg: number) => {
+    if (orderBlock) {
+      const nextText = new Date(orderBlock.nextAllowedAt).toLocaleDateString("es-UY");
+      setFeedback({
+        type: "error",
+        message: `Ya tienes un pedido en proceso. Podras hacer otro el ${nextText} o si se cancela.`,
+      });
+      return;
+    }
     const info = canAddInfo(productId, maxKg);
     if (info.allowedKg <= 0) {
       setFeedback({
@@ -102,6 +126,19 @@ export const UserProductsPage = () => {
             }`}
           >
             <span>{feedback.message}</span>
+          </div>
+        )}
+        {orderBlock && (
+          <div className="mt-4 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+            <p className="font-semibold text-rose-700">Pedido bloqueado temporalmente.</p>
+            <p>
+              Ultimo pedido: {new Date(orderBlock.order.createdAt).toLocaleDateString("es-UY")} (
+              {orderBlock.order.status})
+            </p>
+            <p>
+              Podras crear un nuevo pedido el {new Date(orderBlock.nextAllowedAt).toLocaleDateString("es-UY")} o
+              si el actual se cancela.
+            </p>
           </div>
         )}
 

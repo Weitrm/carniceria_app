@@ -32,6 +32,7 @@ export const UserCartPage = () => {
   const clearCart = cartStore((s) => s.clear);
   const addOrder = ordersStore((s) => s.addOrder);
   const orders = ordersStore((s) => s.orders);
+  const getOrderBlock = ordersStore((s) => s.getOrderBlock);
   const [feedback, setFeedback] = useState<string | null>(null);
 
   const detailedItems = useMemo<CartLine[]>(() => {
@@ -81,13 +82,27 @@ export const UserCartPage = () => {
       setFeedback("Maximo 8 kg en total. Ajusta cantidades antes de enviar.");
       return;
     }
-    addOrder({
+    const block = getOrderBlock(user.id);
+    if (block) {
+      const createdText = new Date(block.order.createdAt).toLocaleDateString("es-UY");
+      const nextText = new Date(block.nextAllowedAt).toLocaleDateString("es-UY");
+      setFeedback(
+        `Ya tienes un pedido en proceso (estado: ${block.order.status}) enviado el ${createdText}. Podras enviar otro el ${nextText} o si cancelas el actual.`
+      );
+      return;
+    }
+
+    const result = addOrder({
       userId: user.id,
       items: detailedItems.map((d) => ({
         productId: d.productId,
         cantidadKg: d.cantidadKg,
       })),
     });
+    if (!result.success) {
+      setFeedback(result.reason || "No se pudo enviar el pedido. Intenta nuevamente.");
+      return;
+    }
     clearCart();
     setFeedback("Pedido enviado.");
     navigate("/user/products");
@@ -100,10 +115,15 @@ export const UserCartPage = () => {
     return userOrders.sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
   }, [orders, user]);
 
+  const pendingBlock = useMemo(() => {
+    if (!user) return null;
+    return getOrderBlock(user.id);
+  }, [getOrderBlock, orders, user]);
+
   const isCartEmpty = detailedItems.length === 0;
   const overProducts = totals.productCount > 2;
   const overKg = totals.totalKg > 8;
-  const disableSend = isCartEmpty || overProducts || overKg;
+  const disableSend = isCartEmpty || overProducts || overKg || !!pendingBlock;
 
   return (
     <AppShell>
@@ -135,6 +155,20 @@ export const UserCartPage = () => {
         {feedback && (
           <div className="mt-4 rounded-lg border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
             {feedback}
+          </div>
+        )}
+
+        {pendingBlock && (
+          <div className="mt-4 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+            <p className="font-semibold text-rose-700">Ya tienes un pedido en proceso.</p>
+            <p>
+              Enviado: {new Date(pendingBlock.order.createdAt).toLocaleDateString("es-UY")} (estado:{" "}
+              {pendingBlock.order.status})
+            </p>
+            <p>
+              Podras enviar otro pedido el {new Date(pendingBlock.nextAllowedAt).toLocaleDateString("es-UY")} o
+              si el actual es cancelado.
+            </p>
           </div>
         )}
 
@@ -271,8 +305,13 @@ export const UserCartPage = () => {
               disabled={disableSend}
               onClick={handleSend}
               className="mt-4 w-full rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-emerald-200"
+              title={
+                pendingBlock
+                  ? "Ya tienes un pedido en proceso. Podras enviar otro cuando pasen 7 dias o se cancele."
+                  : undefined
+              }
             >
-              Enviar pedido
+              {pendingBlock ? "Pedido en proceso" : "Enviar pedido"}
             </button>
             <button
               disabled={isCartEmpty}

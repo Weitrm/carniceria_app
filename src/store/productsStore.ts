@@ -1,31 +1,6 @@
 import { create } from "zustand";
 import type { Product, ProductInput } from "../lib/types";
-
-const PRODUCTS_STORAGE_KEY = "carniceria_products";
-
-const DEFAULT_PRODUCTS: Product[] = [
-  {
-    id: "prod-001",
-    nombre: "Bife Angosto",
-    precioPorKg: 7800,
-    maxKgPorPersona: 3,
-    isActive: true,
-  },
-  {
-    id: "prod-002",
-    nombre: "Vacio",
-    precioPorKg: 6900,
-    maxKgPorPersona: 2,
-    isActive: true,
-  },
-  {
-    id: "prod-003",
-    nombre: "Asado",
-    precioPorKg: 5200,
-    maxKgPorPersona: 4,
-    isActive: true,
-  },
-];
+import { LocalProductsRepository } from "../lib/repositories/productsRepository";
 
 type ProductsState = {
   products: Product[];
@@ -33,21 +8,13 @@ type ProductsState = {
   updateProduct: (id: string, data: ProductInput) => void;
   toggleActive: (id: string) => void;
   removeProduct: (id: string) => void;
-};
-
-const persistProducts = (products: Product[]) => {
-  localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify(products));
-};
-
-const loadProducts = (): Product[] => {
-  const raw = localStorage.getItem(PRODUCTS_STORAGE_KEY);
-  if (!raw) return DEFAULT_PRODUCTS;
-  try {
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed : DEFAULT_PRODUCTS;
-  } catch {
-    return DEFAULT_PRODUCTS;
-  }
+  addProductAsync: (data: ProductInput) => Promise<void>;
+  updateProductAsync: (id: string, data: ProductInput) => Promise<void>;
+  toggleActiveAsync: (id: string) => Promise<void>;
+  removeProductAsync: (id: string) => Promise<void>;
+  refresh: () => Promise<void>;
+  isLoading: boolean;
+  error: string | null;
 };
 
 const createId = () =>
@@ -55,8 +22,12 @@ const createId = () =>
     ? crypto.randomUUID()
     : `prod-${Math.random().toString(36).slice(2, 8)}`;
 
-export const productsStore = create<ProductsState>((set) => ({
-  products: loadProducts(),
+const repository = new LocalProductsRepository();
+
+export const productsStore = create<ProductsState>((set, get) => ({
+  products: repository.load(),
+  isLoading: false,
+  error: null,
   addProduct: (data) =>
     set((state) => {
       const product: Product = {
@@ -65,7 +36,7 @@ export const productsStore = create<ProductsState>((set) => ({
         isActive: data.isActive ?? true,
       };
       const products = [...state.products, product];
-      persistProducts(products);
+      repository.save(products);
       return { products };
     }),
   updateProduct: (id, data) =>
@@ -73,7 +44,7 @@ export const productsStore = create<ProductsState>((set) => ({
       const products = state.products.map((product) =>
         product.id === id ? { ...product, ...data } : product
       );
-      persistProducts(products);
+      repository.save(products);
       return { products };
     }),
   toggleActive: (id) =>
@@ -81,15 +52,56 @@ export const productsStore = create<ProductsState>((set) => ({
       const products = state.products.map((product) =>
         product.id === id ? { ...product, isActive: !product.isActive } : product
       );
-      persistProducts(products);
+      repository.save(products);
       return { products };
     }),
   removeProduct: (id) =>
     set((state) => {
       const products = state.products.filter((p) => p.id !== id);
-      persistProducts(products);
+      repository.save(products);
       return { products };
     }),
+  refresh: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const products = await repository.list();
+      set({ products });
+    } catch (error) {
+      console.error(error);
+      set({ error: "No se pudieron cargar los productos" });
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+  addProductAsync: async (data) => {
+    const product: Product = {
+      ...data,
+      id: createId(),
+      isActive: data.isActive ?? true,
+    };
+    const next = [...get().products, product];
+    set({ products: next });
+    await repository.persist(next);
+  },
+  updateProductAsync: async (id, data) => {
+    const next = get().products.map((product) =>
+      product.id === id ? { ...product, ...data } : product
+    );
+    set({ products: next });
+    await repository.persist(next);
+  },
+  toggleActiveAsync: async (id) => {
+    const next = get().products.map((product) =>
+      product.id === id ? { ...product, isActive: !product.isActive } : product
+    );
+    set({ products: next });
+    await repository.persist(next);
+  },
+  removeProductAsync: async (id) => {
+    const next = get().products.filter((p) => p.id !== id);
+    set({ products: next });
+    await repository.persist(next);
+  },
 }));
 
 export default productsStore;

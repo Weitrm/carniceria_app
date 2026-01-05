@@ -31,12 +31,13 @@ export const UserProductsPage = () => {
   const items = cartStore((s) => s.items);
   const addToCart = cartStore((s) => s.addItem);
   const getOrderBlock = ordersStore((s) => s.getOrderBlock);
+  const orders = ordersStore((s) => s.orders);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const activeProducts = products.filter((p) => p.isActive);
   const orderBlock = useMemo(() => {
     if (!user) return null;
     return getOrderBlock(user.id);
-  }, [getOrderBlock, user]);
+  }, [getOrderBlock, user, orders]);
 
   const totals = useMemo(() => {
     const totalKg = items.reduce((sum, it) => sum + it.cantidadKg, 0);

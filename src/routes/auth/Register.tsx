@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { loadUsers, saveUsers } from "../../lib/userStorage";
 import type { StoredUser } from "../../lib/types";
 import { hasMinLength, isValidEmail } from "../../lib/validation";
+import { authRepository } from "../../lib/repositories/authRepository";
 
 export const Register = () => {
   const navigate = useNavigate();
@@ -38,7 +38,7 @@ export const Register = () => {
       return;
     }
 
-    const users = loadUsers();
+    const users = authRepository.loadUsers();
     if (users.some((u) => u.email === email)) {
       setFormError("Ese correo ya está registrado");
       return;
@@ -53,12 +53,12 @@ export const Register = () => {
       role: "operario",
     };
 
-    saveUsers([...users, newUser]);
+    authRepository.saveUsers([...users, newUser]);
     setFormError("");
     setSuccess("Cuenta creada. Te redirigimos al login...");
     setTimeout(() => {
       navigate("/login", { replace: true });
-    }, 1200);
+    }, 1000);
   };
 
   return (

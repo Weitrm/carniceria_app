@@ -1,10 +1,8 @@
 import { create } from "zustand";
 import type { Order, OrderInput, OrderStatus } from "../lib/types";
+import { LocalOrdersRepository } from "../lib/repositories/ordersRepository";
 
-const ORDERS_STORAGE_KEY = "carniceria_orders";
 const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
-
-const DEFAULT_ORDERS: Order[] = [];
 
 type OrderBlock = {
   order: Order;
@@ -27,25 +25,11 @@ type OrdersState = {
   addOrder: (data: OrderInput) => AddOrderResult;
   updateStatus: (id: string, status: OrderStatus) => void;
   getOrderBlock: (userId: string) => OrderBlock | null;
-};
-
-const persistOrders = (orders: Order[]) => {
-  localStorage.setItem(ORDERS_STORAGE_KEY, JSON.stringify(orders));
-};
-
-const loadOrders = (): Order[] => {
-  const raw = localStorage.getItem(ORDERS_STORAGE_KEY);
-  if (!raw) return DEFAULT_ORDERS;
-  try {
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return DEFAULT_ORDERS;
-    return parsed.map((order) => ({
-      ...order,
-      updatedAt: order.updatedAt ?? order.createdAt ?? new Date().toISOString(),
-    }));
-  } catch {
-    return DEFAULT_ORDERS;
-  }
+  addOrderAsync: (data: OrderInput) => Promise<AddOrderResult>;
+  updateStatusAsync: (id: string, status: OrderStatus) => Promise<void>;
+  refresh: () => Promise<void>;
+  isLoading: boolean;
+  error: string | null;
 };
 
 const createId = () => {
@@ -84,8 +68,12 @@ const findOrderBlock = (orders: Order[], userId: string): OrderBlock | null => {
   return null;
 };
 
+const repository = new LocalOrdersRepository();
+
 export const ordersStore = create<OrdersState>((set, get) => ({
-  orders: loadOrders(),
+  orders: repository.load(),
+  isLoading: false,
+  error: null,
   addOrder: (data) => {
     const sanitizedItems = data.items.filter((item) => item.cantidadKg > 0);
     if (sanitizedItems.length === 0) {
@@ -112,7 +100,7 @@ export const ordersStore = create<OrdersState>((set, get) => ({
     };
     set((state) => {
       const orders = [order, ...state.orders];
-      persistOrders(orders);
+      repository.save(orders);
       return { orders };
     });
     return { success: true, order };
@@ -123,10 +111,60 @@ export const ordersStore = create<OrdersState>((set, get) => ({
       const orders = state.orders.map((order) =>
         order.id === id ? { ...order, status, updatedAt: now } : order
       );
-      persistOrders(orders);
+      repository.save(orders);
       return { orders };
     }),
   getOrderBlock: (userId) => findOrderBlock(get().orders, userId),
+  refresh: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const orders = await repository.list();
+      set({ orders });
+    } catch (error) {
+      set({ error: "No se pudieron cargar los pedidos" });
+      console.error(error);
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+  addOrderAsync: async (data) => {
+    const sanitizedItems = data.items.filter((item) => item.cantidadKg > 0);
+    if (sanitizedItems.length === 0) {
+      return { success: false, reason: "Agrega productos con cantidad mayor a 0." };
+    }
+
+    const pendingBlock = findOrderBlock(get().orders, data.userId);
+    if (pendingBlock) {
+      return {
+        success: false,
+        reason: "Ya tienes un pedido en proceso. Podras enviar otro cuando pasen 7 dias o se cancele.",
+        blockingOrder: pendingBlock.order,
+      };
+    }
+
+    const now = new Date().toISOString();
+    const order: Order = {
+      id: createId(),
+      userId: data.userId,
+      items: sanitizedItems,
+      status: "pendiente",
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    const nextOrders = [order, ...get().orders];
+    set({ orders: nextOrders });
+    await repository.persist(nextOrders);
+    return { success: true, order };
+  },
+  updateStatusAsync: async (id, status) => {
+    const now = new Date().toISOString();
+    const nextOrders = get().orders.map((order) =>
+      order.id === id ? { ...order, status, updatedAt: now } : order
+    );
+    set({ orders: nextOrders });
+    await repository.persist(nextOrders);
+  },
 }));
 
 export default ordersStore;

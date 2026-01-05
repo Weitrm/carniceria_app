@@ -1,4 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import {QueryClient, QueryClientProvider} from "@tanstack/react-query";
+
 import {Login} from "./routes/auth/Login";
 import {Register} from "./routes/auth/Register";
 
@@ -10,8 +12,14 @@ import {AdminOrdersPage} from "./routes/admin/AdminOrdersPage";
 import {AdminProductsPage} from "./routes/admin/AdminProductsPage";
 import { ProtectedRoute } from "./components/shared/ProtectedRoute";
 
+
 const App = () => {
+  
+  const queryClient = new QueryClient();
+  
   return (
+
+    <QueryClientProvider client={queryClient}>
     <BrowserRouter>
       <Routes>
         {/* Auth */}
@@ -31,6 +39,7 @@ const App = () => {
         <Route path="*" element={<Navigate to="/login" />} />
       </Routes>
     </BrowserRouter>
+    </QueryClientProvider>
   );
 }
 

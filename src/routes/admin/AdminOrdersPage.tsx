@@ -5,7 +5,7 @@ import { SessionHeader } from "../../components/shared/SessionHeader";
 import ordersStore from "../../store/ordersStore";
 import productsStore from "../../store/productsStore";
 import type { CartLine, OrderStatus } from "../../lib/types";
-import { loadUsers } from "../../lib/userStorage";
+import { authRepository } from "../../lib/repositories/authRepository";
 
 const currency = (value: number) =>
   new Intl.NumberFormat("es-UY", {
@@ -36,7 +36,7 @@ export const AdminOrdersPage = () => {
   const orders = ordersStore((s) => s.orders);
   const updateStatus = ordersStore((s) => s.updateStatus);
   const products = productsStore((s) => s.products);
-  const users = useMemo(() => loadUsers(), []);
+  const users = useMemo(() => authRepository.loadUsers(), []);
 
   const [statusFilter, setStatusFilter] = useState<OrderStatus | "todos">("todos");
   const [userFilter, setUserFilter] = useState<string>("todos");

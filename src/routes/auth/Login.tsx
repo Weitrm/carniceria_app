@@ -2,8 +2,8 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import authStore from "../../store/authStore";
-import { loadUsers } from "../../lib/userStorage";
 import { isValidEmail } from "../../lib/validation";
+import { authRepository } from "../../lib/repositories/authRepository";
 
 type LoginFormValues = {
   email: string;
@@ -25,7 +25,7 @@ export const Login = () => {
   });
 
   const onSubmit = handleSubmit(async (values) => {
-    const users = loadUsers();
+    const users = authRepository.loadUsers();
     const found = users.find(
       (u) => u.email === values.email && u.password === values.password
     );

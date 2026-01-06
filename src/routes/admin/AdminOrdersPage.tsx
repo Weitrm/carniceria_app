@@ -119,14 +119,12 @@ export const AdminOrdersPage = () => {
               Revisa los pedidos enviados por los operarios, filtra el historial y actualiza su estado.
             </p>
           </div>
-          <div className="flex w-full flex-col gap-2 sm:w-auto sm:items-end">
-            <button
-              onClick={() => navigate("/admin/products")}
-              className="w-full rounded-lg border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700 transition hover:border-rose-200 hover:text-rose-600 sm:w-auto"
-            >
-              Ir a productos
-            </button>
-          </div>
+          <button
+            onClick={() => navigate("/admin")}
+            className="w-full rounded-lg border border-rose-100 px-4 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-50 sm:w-auto"
+          >
+            Volver al inicio
+          </button>
         </header>
 
         <div className="mt-6 grid gap-4">

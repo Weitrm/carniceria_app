@@ -1,12 +1,22 @@
 import { create } from "zustand";
-import type { Order, OrderInput, OrderStatus } from "../lib/types";
+import type { Order, OrderInput, OrderPolicy, OrderStatus } from "../lib/types";
 import { LocalOrdersRepository } from "../lib/repositories/ordersRepository";
+import {
+  defaultPolicyForUser,
+  findNextAllowedDate,
+  formatAllowedDays,
+  isDayAllowed,
+} from "../lib/orderPolicies";
+import orderPoliciesStore from "./orderPoliciesStore";
 
 const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
 type OrderBlock = {
-  order: Order;
-  nextAllowedAt: string;
+  type: "day" | "limit";
+  order?: Order;
+  nextAllowedAt?: string;
+  reason: string;
+  policy: OrderPolicy;
 };
 
 type AddOrderResult =
@@ -41,31 +51,66 @@ const createId = () => {
   return `ORD-${yyyy}${mm}${dd}-${suffix}`;
 };
 
-const findOrderBlock = (orders: Order[], userId: string): OrderBlock | null => {
-  const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
-  const nowDay = todayStart.getTime();
+const policyForUser = (userId: string): OrderPolicy =>
+  orderPoliciesStore.getState().getPolicy(userId) ?? defaultPolicyForUser(userId);
 
-  const latest = [...orders]
-    .filter((o) => o.userId === userId)
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
+const findDayBlock = (policy: OrderPolicy): OrderBlock | null => {
+  if (isDayAllowed(policy)) return null;
+  const nextDate = findNextAllowedDate(policy);
+  const allowedText = formatAllowedDays(policy.allowedDays);
+  return {
+    type: "day",
+    policy,
+    nextAllowedAt: nextDate?.toISOString(),
+    reason: `No puede enviar pedidos hoy. Dias habilitados: ${allowedText}.`,
+  };
+};
 
-  if (!latest) return null;
-  if (latest.status === "cancelado") return null;
-
-  const created = new Date(latest.createdAt);
-  if (Number.isNaN(created.getTime())) return null;
-  created.setHours(0, 0, 0, 0);
-  const createdDay = created.getTime();
-  const nextAllowedMs = createdDay + ONE_WEEK_MS;
-
-  if (nowDay < nextAllowedMs) {
+const findLimitBlock = (
+  orders: Order[],
+  userId: string,
+  policy: OrderPolicy
+): OrderBlock | null => {
+  if (policy.maxOrdersPerWeek === null) return null;
+  if (policy.maxOrdersPerWeek === 0) {
     return {
+      type: "limit",
+      policy,
+      reason: "Este usuario tiene los pedidos deshabilitados.",
+    };
+  }
+  const now = Date.now();
+  const weekAgo = now - ONE_WEEK_MS;
+  const relevant = orders
+    .filter((o) => o.userId === userId && o.status !== "cancelado")
+    .filter((o) => {
+      const created = new Date(o.createdAt).getTime();
+      if (Number.isNaN(created)) return false;
+      return created >= weekAgo;
+    });
+  if (relevant.length >= policy.maxOrdersPerWeek) {
+    const ordered = [...relevant].sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+    const oldest = ordered[0];
+    const latest = ordered[ordered.length - 1];
+    const nextAllowedAt = new Date(new Date(oldest.createdAt).getTime() + ONE_WEEK_MS).toISOString();
+    const limitLabel =
+      policy.maxOrdersPerWeek === 1
+        ? "1 pedido cada 7 dias"
+        : `${policy.maxOrdersPerWeek} pedidos cada 7 dias`;
+    return {
+      type: "limit",
+      policy,
       order: latest,
-      nextAllowedAt: new Date(nextAllowedMs).toISOString(),
+      nextAllowedAt,
+      reason: `Limite de ${limitLabel} alcanzado.`,
     };
   }
   return null;
+};
+
+const findOrderBlock = (orders: Order[], userId: string): OrderBlock | null => {
+  const policy = policyForUser(userId);
+  return findDayBlock(policy) ?? findLimitBlock(orders, userId, policy);
 };
 
 const repository = new LocalOrdersRepository();
@@ -84,7 +129,7 @@ export const ordersStore = create<OrdersState>((set, get) => ({
     if (pendingBlock) {
       return {
         success: false,
-        reason: "Ya tienes un pedido en proceso. Podras enviar otro cuando pasen 7 dias o se cancele.",
+        reason: pendingBlock.reason,
         blockingOrder: pendingBlock.order,
       };
     }
@@ -137,7 +182,7 @@ export const ordersStore = create<OrdersState>((set, get) => ({
     if (pendingBlock) {
       return {
         success: false,
-        reason: "Ya tienes un pedido en proceso. Podras enviar otro cuando pasen 7 dias o se cancele.",
+        reason: pendingBlock.reason,
         blockingOrder: pendingBlock.order,
       };
     }

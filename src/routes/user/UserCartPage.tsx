@@ -6,6 +6,7 @@ import productsStore from "../../store/productsStore";
 import cartStore from "../../store/cartStore";
 import ordersStore from "../../store/ordersStore";
 import authStore from "../../store/authStore";
+import orderPoliciesStore from "../../store/orderPoliciesStore";
 import type { CartLine, OrderStatus } from "../../lib/types";
 
 const currencyFormat = (value: number) =>
@@ -33,6 +34,7 @@ export const UserCartPage = () => {
   const addOrder = ordersStore((s) => s.addOrder);
   const orders = ordersStore((s) => s.orders);
   const getOrderBlock = ordersStore((s) => s.getOrderBlock);
+  const policies = orderPoliciesStore((s) => s.policies);
   const [feedback, setFeedback] = useState<string | null>(null);
 
   const detailedItems = useMemo<CartLine[]>(() => {
@@ -48,6 +50,28 @@ export const UserCartPage = () => {
     const total = detailedItems.reduce((sum, item) => sum + item.subtotal, 0);
     return { totalKg, total, productCount: detailedItems.length };
   }, [detailedItems]);
+
+  const pendingBlock = useMemo(() => {
+    if (!user) return null;
+    return getOrderBlock(user.id);
+  }, [getOrderBlock, orders, user, policies]);
+  const blockMessage = useMemo(() => {
+    if (!pendingBlock) return null;
+    if (pendingBlock.type === "day") {
+      const nextText = pendingBlock.nextAllowedAt
+        ? ` Proximo dia habilitado: ${new Date(pendingBlock.nextAllowedAt).toLocaleDateString("es-UY")}.`
+        : "";
+      return `${pendingBlock.reason}${nextText}`;
+    }
+    if (pendingBlock.type === "limit") {
+      const nextText = pendingBlock.nextAllowedAt
+        ? ` Podras crear otro pedido el ${new Date(pendingBlock.nextAllowedAt).toLocaleDateString("es-UY")}.`
+        : "";
+      const statusText = pendingBlock.order ? ` Ultimo estado: ${pendingBlock.order.status}.` : "";
+      return `${pendingBlock.reason}${nextText}${statusText}`;
+    }
+    return pendingBlock.reason;
+  }, [pendingBlock]);
 
   const handleUpdateQty = (productId: string, value: number, maxKg: number) => {
     updateCantidad(productId, value, maxKg);
@@ -84,11 +108,11 @@ export const UserCartPage = () => {
     }
     const block = getOrderBlock(user.id);
     if (block) {
-      const createdText = new Date(block.order.createdAt).toLocaleDateString("es-UY");
-      const nextText = new Date(block.nextAllowedAt).toLocaleDateString("es-UY");
-      setFeedback(
-        `Ya tienes un pedido en proceso (estado: ${block.order.status}) enviado el ${createdText}. Podras enviar otro el ${nextText} o si cancelas el actual.`
-      );
+      const nextText = block.nextAllowedAt
+        ? ` Disponible el ${new Date(block.nextAllowedAt).toLocaleDateString("es-UY")}.`
+        : "";
+      const statusText = block.order ? ` Ultimo estado: ${block.order.status}.` : "";
+      setFeedback(blockMessage || `${block.reason}${nextText}${statusText}`);
       return;
     }
 
@@ -115,11 +139,6 @@ export const UserCartPage = () => {
     return userOrders.sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
   }, [orders, user]);
 
-  const pendingBlock = useMemo(() => {
-    if (!user) return null;
-    return getOrderBlock(user.id);
-  }, [getOrderBlock, orders, user]);
-
   const isCartEmpty = detailedItems.length === 0;
   const overProducts = totals.productCount > 2;
   const overKg = totals.totalKg > 8;
@@ -129,26 +148,63 @@ export const UserCartPage = () => {
     <AppShell>
       <SessionHeader />
       <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-rose-100/60">
-        <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-rose-500">
-              Carrito
-            </p>
-            <h1 className="text-2xl font-bold text-slate-900">Resumen de pedido</h1>
-            <p className="mt-1 text-sm text-slate-600">
-              Maximo 8 kg totales y hasta 2 productos. Confirma cantidades antes de enviar.
-            </p>
+        <header className="flex flex-col gap-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-wide text-rose-500">
+                Carrito
+              </p>
+              <h1 className="text-3xl font-bold text-slate-900">Confirma tu pedido</h1>
+              <p className="mt-1 text-sm text-slate-600">
+                Revisa cantidades y envialo. Maximo 2 productos y 8 kg en total.
+              </p>
+            </div>
+            <div className="flex flex-col items-end gap-2 text-right">
+              <div className="flex flex-wrap items-center gap-2 text-xs text-slate-600">
+                <span className="rounded-full bg-slate-100 px-3 py-1 font-semibold text-slate-700">
+                  {totals.productCount} productos
+                </span>
+                <span className="rounded-full bg-slate-100 px-3 py-1 font-semibold text-slate-700">
+                  {totals.totalKg} kg
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => navigate("/user/products")}
+                  className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100"
+                >
+                  Seguir comprando
+                </button>
+                <button
+                  onClick={() => navigate("/user/history")}
+                  className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 transition hover:border-rose-200 hover:text-rose-700"
+                >
+                  Historial
+                </button>
+              </div>
+            </div>
           </div>
-          <div className="flex w-full flex-col gap-2 sm:w-auto sm:items-end">
-            <span className="inline-flex justify-center rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
-              En revision
-            </span>
-            <button
-              onClick={() => navigate("/user/products")}
-              className="w-full rounded-lg border border-emerald-200 bg-white px-4 py-2 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-50 sm:w-auto"
-            >
-              Seguir comprando
-            </button>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-lg border border-emerald-100 bg-emerald-50/70 px-4 py-3 text-sm text-emerald-800">
+              <p className="font-semibold">Checklist</p>
+              <ul className="mt-1 space-y-1 text-xs">
+                <li>• Max 2 productos</li>
+                <li>• Max 8 kg totales</li>
+                <li>• Ajusta con +/- o escribe los kg</li>
+              </ul>
+            </div>
+            <div className="rounded-lg border border-slate-100 bg-slate-50 px-4 py-3 text-sm text-slate-800">
+              <p className="font-semibold">Resumen rapido</p>
+              <p className="text-xs text-slate-600">
+                {totals.productCount} productos seleccionados, {totals.totalKg} kg en total.
+              </p>
+            </div>
+            <div className="rounded-lg border border-amber-100 bg-amber-50/70 px-4 py-3 text-sm text-amber-800">
+              <p className="font-semibold">Estado de envio</p>
+              <p className="text-xs">
+                {pendingBlock ? "Pedidos limitados por reglas activas." : "Listo para enviar si cumples los limites."}
+              </p>
+            </div>
           </div>
         </header>
 
@@ -160,15 +216,14 @@ export const UserCartPage = () => {
 
         {pendingBlock && (
           <div className="mt-4 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
-            <p className="font-semibold text-rose-700">Ya tienes un pedido en proceso.</p>
-            <p>
-              Enviado: {new Date(pendingBlock.order.createdAt).toLocaleDateString("es-UY")} (estado:{" "}
-              {pendingBlock.order.status})
-            </p>
-            <p>
-              Podras enviar otro pedido el {new Date(pendingBlock.nextAllowedAt).toLocaleDateString("es-UY")} o
-              si el actual es cancelado.
-            </p>
+            <p className="font-semibold text-rose-700">Pedidos limitados.</p>
+            <p>{blockMessage}</p>
+            {pendingBlock.order && (
+              <p>
+                Ultimo pedido: {new Date(pendingBlock.order.createdAt).toLocaleDateString("es-UY")} (estado:{" "}
+                {pendingBlock.order.status})
+              </p>
+            )}
           </div>
         )}
 
@@ -177,7 +232,7 @@ export const UserCartPage = () => {
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  Estado de tu ultimo pedido
+                  Ultimo pedido
                 </p>
                 <p className="text-xs text-slate-500">
                   Enviado: {new Date(lastUserOrder.createdAt).toLocaleString()}
@@ -295,23 +350,37 @@ export const UserCartPage = () => {
               </div>
             )}
             <div className="mt-2 flex items-center justify-between text-slate-800">
-              <span>Total a pagar</span>
+              <span>Total estimado</span>
               <span className="text-lg font-bold text-slate-900">{currencyFormat(totals.total)}</span>
             </div>
             <p className="mt-1 text-xs text-emerald-700">
               Los valores son informativos para control interno.
             </p>
+            <div className="mt-3 space-y-2 text-xs text-slate-700">
+              <div className="flex items-center gap-2">
+                <span className={`h-2 w-2 rounded-full ${isCartEmpty ? "bg-rose-400" : "bg-emerald-500"}`} />
+                <span>{isCartEmpty ? "Agrega al menos un producto." : "Tienes productos listos."}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className={`h-2 w-2 rounded-full ${overProducts ? "bg-rose-400" : "bg-emerald-500"}`} />
+                <span>{overProducts ? "Maximo 2 productos." : "Cantidad de productos ok."}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className={`h-2 w-2 rounded-full ${overKg ? "bg-rose-400" : "bg-emerald-500"}`} />
+                <span>{overKg ? "Reduce kilos hasta 8." : "Kilos dentro del limite."}</span>
+              </div>
+            </div>
             <button
               disabled={disableSend}
               onClick={handleSend}
               className="mt-4 w-full rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-emerald-200"
               title={
                 pendingBlock
-                  ? "Ya tienes un pedido en proceso. Podras enviar otro cuando pasen 7 dias o se cancele."
+                  ? blockMessage || "No puedes enviar pedidos en este momento."
                   : undefined
               }
             >
-              {pendingBlock ? "Pedido en proceso" : "Enviar pedido"}
+              {pendingBlock ? "Pedido limitado" : "Enviar pedido"}
             </button>
             <button
               disabled={isCartEmpty}

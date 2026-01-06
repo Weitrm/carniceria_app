@@ -95,12 +95,12 @@ export const AdminProductsPage = () => {
               Crea, edita o desactiva cortes disponibles para los operarios.
             </p>
           </div>
-          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap">
             <button
-              onClick={() => navigate("/admin/orders")}
-              className="w-full rounded-lg border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700 transition hover:border-rose-200 hover:text-rose-600 sm:w-auto"
+              onClick={() => navigate("/admin")}
+              className="w-full rounded-lg border border-rose-100 px-4 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-50 sm:w-auto"
             >
-              Ir a pedidos
+              Volver al inicio
             </button>
             <button
               onClick={() => setEditingId(null)}

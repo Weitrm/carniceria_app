@@ -6,6 +6,7 @@ import productsStore from "../../store/productsStore";
 import cartStore from "../../store/cartStore";
 import ordersStore from "../../store/ordersStore";
 import authStore from "../../store/authStore";
+import orderPoliciesStore from "../../store/orderPoliciesStore";
 
 const currencyFormat = (value: number) =>
   new Intl.NumberFormat("es-UY", {
@@ -32,12 +33,30 @@ export const UserProductsPage = () => {
   const addToCart = cartStore((s) => s.addItem);
   const getOrderBlock = ordersStore((s) => s.getOrderBlock);
   const orders = ordersStore((s) => s.orders);
+  const policies = orderPoliciesStore((s) => s.policies);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const activeProducts = products.filter((p) => p.isActive);
   const orderBlock = useMemo(() => {
     if (!user) return null;
     return getOrderBlock(user.id);
-  }, [getOrderBlock, user, orders]);
+  }, [getOrderBlock, user, orders, policies]);
+  const blockMessage = useMemo(() => {
+    if (!orderBlock) return null;
+    if (orderBlock.type === "day") {
+      const nextText = orderBlock.nextAllowedAt
+        ? ` Proximo dia habilitado: ${new Date(orderBlock.nextAllowedAt).toLocaleDateString("es-UY")}.`
+        : "";
+      return `${orderBlock.reason}${nextText}`;
+    }
+    if (orderBlock.type === "limit") {
+      const nextText = orderBlock.nextAllowedAt
+        ? ` Podras crear otro pedido el ${new Date(orderBlock.nextAllowedAt).toLocaleDateString("es-UY")}.`
+        : "";
+      const statusText = orderBlock.order ? ` Ultimo estado: ${orderBlock.order.status}.` : "";
+      return `${orderBlock.reason}${nextText}${statusText}`;
+    }
+    return orderBlock.reason;
+  }, [orderBlock]);
 
   const totals = useMemo(() => {
     const totalKg = items.reduce((sum, it) => sum + it.cantidadKg, 0);
@@ -46,11 +65,9 @@ export const UserProductsPage = () => {
 
   const canAddInfo = (productId: string, maxKg: number): AddInfo => {
     if (orderBlock) {
-      const nextText = new Date(orderBlock.nextAllowedAt).toLocaleDateString("es-UY");
-      const statusText = orderBlock.order.status === "hecho" ? "completado" : "pendiente";
       return {
         allowedKg: 0,
-        reason: `No puedes agregar productos. Tu ultimo pedido (${statusText}) permite otro recien el ${nextText}.`,
+        reason: blockMessage || "No puedes agregar productos en este momento.",
       };
     }
     const existing = items.find((it) => it.productId === productId);
@@ -69,10 +86,9 @@ export const UserProductsPage = () => {
 
   const handleAdd = (productId: string, maxKg: number) => {
     if (orderBlock) {
-      const nextText = new Date(orderBlock.nextAllowedAt).toLocaleDateString("es-UY");
       setFeedback({
         type: "error",
-        message: `Ya tienes un pedido en proceso. Podras hacer otro el ${nextText} o si se cancela.`,
+        message: blockMessage || "No puedes agregar productos en este momento.",
       });
       return;
     }
@@ -92,29 +108,72 @@ export const UserProductsPage = () => {
     <AppShell>
       <SessionHeader />
       <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-rose-100/60">
-        <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-rose-500">
-              Catalogo
-            </p>
-            <h1 className="text-2xl font-bold text-slate-900">Productos disponibles</h1>
-            <p className="mt-1 text-sm text-slate-600">
-              Maximo 8 kg por pedido y hasta 2 productos distintos.
-            </p>
+        <header className="flex flex-col gap-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-wide text-rose-500">
+                Catalogo
+              </p>
+              <h1 className="text-3xl font-bold text-slate-900">Arma tu pedido</h1>
+              <p className="mt-1 text-sm text-slate-600">
+                Elige hasta 2 productos y un maximo de 8 kg en total. Ajusta cantidades mas tarde en el carrito.
+              </p>
+            </div>
+            <div className="flex flex-col items-end gap-2 text-right">
+              <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+                Operario
+              </span>
+              <div className="flex flex-wrap items-center gap-2 text-xs text-slate-600">
+                <span className="rounded-full bg-slate-100 px-3 py-1 font-semibold text-slate-700">
+                  {totals.productCount} productos
+                </span>
+                <span className="rounded-full bg-slate-100 px-3 py-1 font-semibold text-slate-700">
+                  {totals.totalKg} kg
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => navigate("/user/cart")}
+                  className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100"
+                >
+                  Ver carrito
+                </button>
+                <button
+                  onClick={() => navigate("/user/history")}
+                  className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 transition hover:border-rose-200 hover:text-rose-700"
+                >
+                  Historial
+                </button>
+              </div>
+            </div>
           </div>
-          <div className="flex flex-col items-end gap-2 text-right">
-            <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-              Operario
-            </span>
-            <span className="text-xs text-slate-500">
-              En carrito: {totals.productCount} productos, {totals.totalKg} kg
-            </span>
-            <button
-              onClick={() => navigate("/user/cart")}
-              className="w-full rounded-lg border border-emerald-200 bg-emerald-200 px-3 py-2 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-50 sm:w-auto"
-            >
-              Ir al carrito
-            </button>
+
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="flex items-center gap-2 rounded-lg border border-emerald-100 bg-emerald-50/70 px-4 py-3 text-sm text-emerald-800">
+              <span className="text-lg">📦</span>
+              <div>
+                <p className="font-semibold text-emerald-800">Reglas rapidas</p>
+                <p className="text-xs">Max 2 productos y 8 kg por pedido.</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 rounded-lg border border-rose-100 bg-rose-50/70 px-4 py-3 text-sm text-rose-800">
+              <span className="text-lg">⏳</span>
+              <div>
+                <p className="font-semibold text-rose-800">Estado</p>
+                <p className="text-xs">
+                  {orderBlock ? "Pedidos limitados por reglas de la empresa." : "Puedes agregar productos ahora."}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 rounded-lg border border-slate-100 bg-slate-50 px-4 py-3 text-sm text-slate-800">
+              <span className="text-lg">🛒</span>
+              <div>
+                <p className="font-semibold text-slate-800">En este pedido</p>
+                <p className="text-xs">
+                  {totals.productCount} productos • {totals.totalKg} kg
+                </p>
+              </div>
+            </div>
           </div>
         </header>
 
@@ -131,15 +190,24 @@ export const UserProductsPage = () => {
         )}
         {orderBlock && (
           <div className="mt-4 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
-            <p className="font-semibold text-rose-700">Pedido bloqueado temporalmente.</p>
-            <p>
-              Ultimo pedido: {new Date(orderBlock.order.createdAt).toLocaleDateString("es-UY")} (
-              {orderBlock.order.status})
-            </p>
-            <p>
-              Podras crear un nuevo pedido el {new Date(orderBlock.nextAllowedAt).toLocaleDateString("es-UY")} o
-              si el actual se cancela.
-            </p>
+            <div className="flex items-start gap-2">
+              <span className="text-lg">⚠️</span>
+              <div>
+                <p className="font-semibold text-rose-700">Pedidos limitados.</p>
+                <p>{blockMessage}</p>
+                {orderBlock.order && (
+                  <p className="text-xs text-rose-700">
+                    Ultimo pedido: {new Date(orderBlock.order.createdAt).toLocaleDateString("es-UY")} (
+                    {orderBlock.order.status})
+                  </p>
+                )}
+              </div>
+            </div>
+            {orderBlock.order && (
+              <div className="mt-3 rounded-lg border border-rose-100 bg-white px-3 py-2 text-xs text-slate-700">
+                Ajusta dias o limites con tu administrador si necesitas enviar otro pedido.
+              </div>
+            )}
           </div>
         )}
 
@@ -162,15 +230,22 @@ export const UserProductsPage = () => {
                       Activo
                     </span>
                   </div>
-                  <p className="mt-1 text-sm text-slate-600">
-                    Max {product.maxKgPorPersona} kg por persona
-                  </p>
+                  <p className="mt-1 text-sm text-slate-600">Max {product.maxKgPorPersona} kg por persona</p>
                   <p className="mt-2 text-2xl font-bold text-rose-700">
-                    {currencyFormat(product.precioPorKg)}{" "}
-                    <span className="text-sm text-slate-500">/kg</span>
+                    {currencyFormat(product.precioPorKg)} <span className="text-sm text-slate-500">/kg</span>
                   </p>
+                  <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+                    <span className="rounded-full bg-slate-100 px-3 py-1 font-semibold text-slate-700">
+                      Puedes agregar: {info.allowedKg} kg
+                    </span>
+                    {items.find((it) => it.productId === product.id) && (
+                      <span className="rounded-full bg-emerald-50 px-3 py-1 font-semibold text-emerald-700">
+                        En carrito
+                      </span>
+                    )}
+                  </div>
                   {info.reason && (
-                    <p className="mt-2 text-xs font-semibold text-rose-600">{info.reason}</p>
+                    <p className="mt-2 text-xs font-semibold text-rose-600 leading-relaxed">{info.reason}</p>
                   )}
                   <div className="mt-4 flex flex-1 items-end">
                     <button

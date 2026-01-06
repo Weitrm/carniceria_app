@@ -1,5 +1,14 @@
 export type UserRole = "operario" | "admin";
 
+export type Weekday =
+  | "lunes"
+  | "martes"
+  | "miercoles"
+  | "jueves"
+  | "viernes"
+  | "sabado"
+  | "domingo";
+
 export interface User {
   id: string;
   nombre: string;
@@ -17,6 +26,16 @@ export interface StoredUser {
   funcionario: string;
   password: string;
   role: UserRole;
+}
+
+export interface OrderPolicy {
+  userId: string;
+  allowedDays: Weekday[];
+  /**
+   * Numero maximo de pedidos permitidos en una ventana de 7 dias.
+   * Si es null, no hay limite.
+   */
+  maxOrdersPerWeek: number | null;
 }
 
 export interface Product {

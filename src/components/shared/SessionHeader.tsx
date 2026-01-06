@@ -18,22 +18,31 @@ export const SessionHeader = () => {
   return (
     <header className="flex items-center justify-between rounded-2xl border border-rose-100 bg-white px-4 py-3 shadow-sm">
       <Link
-        to={isAdmin ? "/admin/orders" : "/user/products"}
+        to={isAdmin ? "/admin" : "/user/products"}
         className="flex items-center gap-2 font-semibold text-rose-700"
       >
         <div className="flex items-center gap-1">
           <img src="../logo.svg" alt="logo" className="w-10 h-10" />
-          <h1 className="font-bold">Carniceria <span className="text-emerald-700">FMP</span></h1>
+          <h1 className="font-bold">
+            Carniceria <span className="text-emerald-700">FMP</span>
+          </h1>
         </div>
       </Link>
-      <div className="flex items-center gap-3 text-sm text-slate-700">
-        {!isAdmin && (
+      <div className="flex flex-wrap items-center gap-2 text-sm text-slate-700">
+        {isAdmin ? (
+          <Link
+            to="/admin"
+            className="rounded-lg border border-rose-100 px-3 py-1 text-xs font-semibold text-rose-700 transition hover:bg-rose-50"
+          >
+            Inicio
+          </Link>
+        ) : (
           <>
             <Link
               to="/user/products"
               className="rounded-lg border border-rose-100 px-3 py-1 text-xs font-semibold text-rose-700 transition hover:bg-rose-50"
             >
-              Catálogo
+              Catalogo
             </Link>
             <Link
               to="/user/history"

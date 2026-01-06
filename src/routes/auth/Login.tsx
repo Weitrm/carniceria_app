@@ -37,7 +37,7 @@ export const Login = () => {
 
     login({ id: found.id, nombre: found.name, role: found.role }, values.remember);
     navigate(
-      found.role === "admin" ? "/admin/products" : "/user/products",
+      found.role === "admin" ? "/admin" : "/user/products",
       { replace: true }
     );
   });

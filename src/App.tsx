@@ -8,8 +8,11 @@ import {UserProductsPage} from "./routes/user/UserProductsPage";
 import {UserCartPage} from "./routes/user/UserCartPage";
 import { UserOrdersHistory } from "./routes/user/UserOrdersHistory";
 
+import { AdminHomePage } from "./routes/admin/AdminHomePage";
 import {AdminOrdersPage} from "./routes/admin/AdminOrdersPage";
 import {AdminProductsPage} from "./routes/admin/AdminProductsPage";
+import { AdminProductTotalsPage } from "./routes/admin/AdminProductTotalsPage";
+import { AdminOrderPermissionsPage } from "./routes/admin/AdminOrderPermissionsPage";
 import { ProtectedRoute } from "./components/shared/ProtectedRoute";
 
 
@@ -32,8 +35,11 @@ const App = () => {
         <Route path="/user/history" element={<ProtectedRoute allowedRoles={['operario']}> <UserOrdersHistory /> </ProtectedRoute>} />
 
         {/* Admin */}
+        <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}> <AdminHomePage /> </ProtectedRoute> } />
         <Route path="/admin/orders" element={<ProtectedRoute allowedRoles={['admin']}> <AdminOrdersPage /> </ProtectedRoute> } />
         <Route path="/admin/products" element={<ProtectedRoute allowedRoles={['admin']}> <AdminProductsPage /> </ProtectedRoute> } />
+        <Route path="/admin/reports" element={<ProtectedRoute allowedRoles={['admin']}> <AdminProductTotalsPage /> </ProtectedRoute> } />
+        <Route path="/admin/permissions" element={<ProtectedRoute allowedRoles={['admin']}> <AdminOrderPermissionsPage /> </ProtectedRoute> } />
 
         {/* Default */}
         <Route path="*" element={<Navigate to="/login" />} />

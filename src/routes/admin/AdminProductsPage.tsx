@@ -8,6 +8,7 @@ import type { Product } from "../../lib/types";
 
 type ProductFormValues = {
   nombre: string;
+  codigo: string;
   precioPorKg: number;
   maxKgPorPersona: number;
   isActive: boolean;
@@ -25,9 +26,12 @@ export const AdminProductsPage = () => {
   const navigate = useNavigate();
   const { products, addProduct, updateProduct, toggleActive, removeProduct,} = productsStore();
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"todos" | "activos" | "inactivos">("todos");
   const { register, handleSubmit, reset, watch } = useForm<ProductFormValues>({
     defaultValues: {
       nombre: "",
+      codigo: "",
       precioPorKg: 0,
       maxKgPorPersona: 1,
       isActive: true,
@@ -39,10 +43,28 @@ export const AdminProductsPage = () => {
     [editingId, products]
   );
 
+  const filteredProducts = useMemo(() => {
+    const searchValue = search.trim().toLowerCase();
+    return products
+      .filter((p) => {
+        if (statusFilter === "activos") return p.isActive;
+        if (statusFilter === "inactivos") return !p.isActive;
+        return true;
+      })
+      .filter((p) => {
+        if (!searchValue) return true;
+        return (
+          p.nombre.toLowerCase().includes(searchValue) ||
+          p.codigo.toLowerCase().includes(searchValue)
+        );
+      });
+  }, [products, search, statusFilter]);
+
   useEffect(() => {
     if (editingProduct) {
       reset({
         nombre: editingProduct.nombre,
+        codigo: editingProduct.codigo,
         precioPorKg: editingProduct.precioPorKg,
         maxKgPorPersona: editingProduct.maxKgPorPersona,
         isActive: editingProduct.isActive,
@@ -50,6 +72,7 @@ export const AdminProductsPage = () => {
     } else {
       reset({
         nombre: "",
+        codigo: "",
         precioPorKg: 0,
         maxKgPorPersona: 1,
         isActive: true,
@@ -60,6 +83,7 @@ export const AdminProductsPage = () => {
   const onSubmit = handleSubmit((values) => {
     const payload = {
       nombre: values.nombre.trim(),
+      codigo: values.codigo.trim(),
       precioPorKg: Number(values.precioPorKg),
       maxKgPorPersona: Number(values.maxKgPorPersona),
       isActive: values.isActive,
@@ -74,6 +98,7 @@ export const AdminProductsPage = () => {
     setEditingId(null);
     reset({
       nombre: "",
+      codigo: "",
       precioPorKg: 0,
       maxKgPorPersona: 1,
       isActive: true,
@@ -114,29 +139,56 @@ export const AdminProductsPage = () => {
         <div className="mt-6 grid gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2 flex justify-center">
             <div className="rounded-xl border border-slate-100 bg-white shadow-sm">
-              <div className="flex flex-col gap-2 border-b border-slate-100 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-                <div>
+              <div className="flex flex-col gap-3 border-b border-slate-100 px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
+                <div className="space-y-1">
                   <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                     Lista de productos
                   </p>
                   <p className="text-sm text-slate-600">
-                    {products.length} {products.length === 1 ? "corte" : "cortes"} configurados
+                    {filteredProducts.length} / {products.length} configurados
                   </p>
                 </div>
-                <div className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-                  {products.filter((p) => p.isActive).length} activos
+                <div className="flex flex-wrap gap-2 text-xs">
+                  <input
+                    type="search"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Buscar producto..."
+                    className="w-48 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm outline-none transition focus:border-rose-300 focus:ring-2 focus:ring-rose-200"
+                  />
+                  {(["todos", "activos", "inactivos"] as const).map((status) => (
+                    <button
+                      key={status}
+                      onClick={() => setStatusFilter(status)}
+                      className={`rounded-full px-3 py-1 font-semibold transition ${
+                        statusFilter === status
+                          ? "bg-rose-600 text-white shadow-sm"
+                          : "border border-slate-200 bg-white text-slate-700 hover:border-rose-200 hover:text-rose-700"
+                      }`}
+                    >
+                      {status === "todos" ? "Todos" : status}
+                    </button>
+                  ))}
+                  <span className="rounded-full bg-emerald-50 px-3 py-1 font-semibold text-emerald-700 flex items-center">
+                    {products.filter((p) => p.isActive).length} Activos
+                  </span>
                 </div>
               </div>
               {products.length === 0 ? (
                 <div className="p-6 text-sm text-slate-600">
                   Aun no hay productos cargados. Usa el formulario para crear el primer corte.
                 </div>
+              ) : filteredProducts.length === 0 ? (
+                <div className="p-6 text-sm text-slate-600">
+                  No se encontraron productos con esos filtros.
+                </div>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="min-w-[720px] divide-y divide-slate-100 text-sm">
+                  <table className="min-w-[820px] divide-y divide-slate-100 text-sm">
                     <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                       <tr>
                         <th className="px-4 py-3">Nombre</th>
+                        <th className="px-4 py-3">Codigo</th>
                         <th className="px-4 py-3">Precio/kg</th>
                         <th className="px-4 py-3">Max kg/persona</th>
                         <th className="px-4 py-3">Estado</th>
@@ -144,11 +196,12 @@ export const AdminProductsPage = () => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                      {products.map((product) => (
+                      {filteredProducts.map((product) => (
                         <tr key={product.id} className="hover:bg-rose-50/40">
                           <td className="px-4 py-3 font-semibold text-slate-900">
                             {product.nombre}
                           </td>
+                          <td className="px-4 py-3 text-slate-700">{product.codigo}</td>
                           <td className="px-4 py-3 text-slate-700">
                             {currencyFormat(product.precioPorKg)}
                           </td>
@@ -221,6 +274,17 @@ export const AdminProductsPage = () => {
                 />
               </div>
 
+              <div className="space-y-1">
+                <label className="text-sm font-semibold text-slate-700">Codigo</label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  {...register("codigo", { required: true })}
+                  className="w-full rounded-lg border border-rose-100 bg-white px-3 py-2 text-sm shadow-sm outline-none transition focus:border-rose-300 focus:ring-2 focus:ring-rose-200"
+                  placeholder="Ej: 998160"
+                />
+              </div>
+
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div className="space-y-1">
                   <label className="text-sm font-semibold text-slate-700">Precio por kg</label>
@@ -278,7 +342,8 @@ export const AdminProductsPage = () => {
             </form>
 
             <div className="mt-4 rounded-lg border border-amber-100 bg-amber-50 p-3 text-xs text-amber-800">
-              Vista previa: {watch("nombre") || "Nuevo producto"} por{" "}
+              Vista previa: {watch("nombre") || "Nuevo producto"} | Codigo{" "}
+              {watch("codigo") || "Sin codigo"} |{" "}
               {watch("precioPorKg") ? currencyFormat(watch("precioPorKg")) : "$0"} | Max{" "}
               {watch("maxKgPorPersona")} kg | {watch("isActive") ? "Activo" : "Inactivo"}
             </div>

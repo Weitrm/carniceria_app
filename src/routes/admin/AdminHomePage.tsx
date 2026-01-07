@@ -18,14 +18,14 @@ const adminSections = [
     tone: "bg-emerald-50 border-emerald-100 text-emerald-800",
   },
   {
-    title: "Kg por producto",
+    title: "Pedidos totales por producto",
     description: "Consulta kilos pedidos por corte en el rango deseado.",
     action: "/admin/reports",
     badge: "Reporte",
     tone: "bg-amber-50 border-amber-100 text-amber-800",
   },
   {
-    title: "Permisos de pedidos",
+    title: "Permisos",
     description: "Define dias habilitados y limites semanales por usuario.",
     action: "/admin/permissions",
     badge: "Accesos",

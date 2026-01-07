@@ -7,6 +7,7 @@ const DEFAULT_PRODUCTS: Product[] = [
   {
     id: "prod-001",
     nombre: "Bife Angosto",
+    codigo: "998170",
     precioPorKg: 7800,
     maxKgPorPersona: 3,
     isActive: true,
@@ -14,6 +15,7 @@ const DEFAULT_PRODUCTS: Product[] = [
   {
     id: "prod-002",
     nombre: "Vacio",
+    codigo: "998165",
     precioPorKg: 6900,
     maxKgPorPersona: 2,
     isActive: true,
@@ -21,6 +23,7 @@ const DEFAULT_PRODUCTS: Product[] = [
   {
     id: "prod-003",
     nombre: "Asado",
+    codigo: "998160",
     precioPorKg: 5200,
     maxKgPorPersona: 4,
     isActive: true,
@@ -40,7 +43,12 @@ export class LocalProductsRepository implements ProductsRepository {
     if (!raw) return DEFAULT_PRODUCTS;
     try {
       const parsed = JSON.parse(raw);
-      return Array.isArray(parsed) && parsed.length > 0 ? parsed : DEFAULT_PRODUCTS;
+      return Array.isArray(parsed) && parsed.length > 0
+        ? parsed.map((product) => ({
+            ...product,
+            codigo: product.codigo == null ? "" : String(product.codigo),
+          }))
+        : DEFAULT_PRODUCTS;
     } catch {
       return DEFAULT_PRODUCTS;
     }

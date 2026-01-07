@@ -41,6 +41,7 @@ export interface OrderPolicy {
 export interface Product {
   id: string;
   nombre: string;
+  codigo: string;
   precioPorKg: number;
   maxKgPorPersona: number;
   isActive: boolean;
